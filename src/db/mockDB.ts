@@ -1030,13 +1030,12 @@ export const mockDB = {
           status: 'Belum Bayar',
           createdAt: new Date().toISOString()
         };
-        invoices.push(newInv);
+        mockDB.saveInvoice(newInv);
         generatedCount++;
       }
     });
 
     if (generatedCount > 0) {
-      localStorage.setItem(KEYS.INVOICES, JSON.stringify(invoices));
       mockDB.addNotification(
         'Generate Tagihan Otomatis',
         `Sistem berhasil men-generate ${generatedCount} invoice tagihan baru untuk bulan ini.`,

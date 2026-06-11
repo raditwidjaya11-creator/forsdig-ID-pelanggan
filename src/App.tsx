@@ -1197,19 +1197,13 @@ export default function App() {
                   </select>
                 </div>
 
-                {/* Simulated Live Role Switcher */}
+                {/* Level Akses Keamanan Aktif */}
                 <div className="flex flex-col text-[10px] font-bold text-slate-500">
-                  <span className="mb-1 uppercase tracking-wider font-mono text-slate-400">Masuk Mode Akses Role</span>
-                  <select
-                    id="header-role-select"
-                    value={activeRole}
-                    onChange={(e) => handleRoleChanged(e.target.value)}
-                    className="bg-red-50/70 text-red-700 text-xs py-1.5 px-3 rounded-lg border border-red-100 outline-none hover:bg-red-100/60 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-semibold"
-                  >
-                    <option value="Super Admin">💼 Super Admin</option>
-                    <option value="Admin">🛡️ Admin Cabang</option>
-                    <option value="Sales">📈 Agen Sales</option>
-                  </select>
+                  <span className="mb-1 uppercase tracking-wider font-mono text-slate-400">Level Akses</span>
+                  <div className="flex items-center space-x-1.5 bg-red-600/10 border border-red-500/20 text-red-650 px-3 py-1.5 rounded-lg text-xs leading-none font-bold uppercase tracking-wider font-mono">
+                    <ShieldCheck className="h-3.5 w-3.5 text-red-600 stroke-[2.5]" />
+                    <span>{currentUser.role}</span>
+                  </div>
                 </div>
 
               </div>
