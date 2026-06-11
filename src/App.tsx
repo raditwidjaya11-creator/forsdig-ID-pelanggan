@@ -43,12 +43,12 @@ import {
 export default function App() {
   // Authentication & Multi-user state structure
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Logged in inside demo, but fully realistic logout/login portal supported
-  const [users, setUsers] = useState([
-    { id: 'usr-1', name: 'Radit Widjaya', email: 'superadmin@foresyndo.co.id', role: 'Super Admin' as UserRole, avatar: 'RW', joinDate: '2025-01-10', status: 'Aktif' as const },
-    { id: 'usr-2', name: 'Andi Wijaya', email: 'andi.sales@foresyndo.co.id', role: 'Sales' as UserRole, avatar: 'AW', joinDate: '2025-03-24', status: 'Aktif' as const },
-    { id: 'usr-3', name: 'Jakarta Admin', email: 'admin.jakarta@foresyndo.co.id', role: 'Admin' as UserRole, avatar: 'JA', joinDate: '2025-02-15', status: 'Aktif' as const }
+  const [users, setUsers] = useState<any[]>([
+    { id: 'usr-1', name: 'Radit Widjaya', email: 'superadmin@foresyndo.co.id', role: 'Super Admin' as UserRole, avatar: 'RW', joinDate: '2025-01-10', status: 'Aktif' as const, pin: '112233' },
+    { id: 'usr-2', name: 'Andi Wijaya', email: 'andi.sales@foresyndo.co.id', role: 'Sales' as UserRole, avatar: 'AW', joinDate: '2025-03-24', status: 'Aktif' as const, pin: '112233' },
+    { id: 'usr-3', name: 'Jakarta Admin', email: 'admin.jakarta@foresyndo.co.id', role: 'Admin' as UserRole, avatar: 'JA', joinDate: '2025-02-15', status: 'Aktif' as const, pin: '112233' }
   ]);
-  const [currentUser, setCurrentUser] = useState(users[0]);
+  const [currentUser, setCurrentUser] = useState<any>(users[0]);
   const [mPinInput, setMPinInput] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
 
@@ -108,25 +108,46 @@ export default function App() {
   // Initialize data on application boot with Firestore support
   useEffect(() => {
     const initApp = async () => {
-      // 1. Hook state inputs
+      // 1. Hook state inputs and populate state instantly first
       const isOnlineConfig = mockDB.getOnlineMode();
       setOnlineMode(isOnlineConfig);
       setActiveRole(mockDB.getActiveRole() as UserRole);
       setSelectedCabang(mockDB.getSelectedCabang());
       setSelectedPerusahaan(mockDB.getSelectedPerusahaan());
+      
+      // Load local data instantly so the UI renders without blocking
+      syncFromDatabase();
 
-      // 2. Fetch live datasets if online
+      // 2. Fetch live cloud datasets asynchronously if online
       if (isOnlineConfig) {
         setSyncing(true);
-        await mockDB.pullFromFirestore();
-        setSyncing(false);
+        try {
+          await mockDB.pullFromFirestore();
+          // Update populated state if sync from cloud succeeded
+          syncFromDatabase();
+          triggerNotification(
+            'Koneksi Cloud Sinkron Terhubung',
+            'Data berhasil disinkronkan langsung dengan Firebase Firestore.',
+            'success'
+          );
+        } catch (error) {
+          console.warn("Background cloud sync timed out or connection failed. Running in Local Mode:", error);
+          // Auto-run monthly generators on local fallback
+          mockDB.generateMonthlyInvoices();
+          syncFromDatabase();
+          triggerNotification(
+            'Mode Lokal Terhubung',
+            'Gagal menyinkronkan data cloud (Koneksi Terbatas / Timeout). Beroperasi di Mode Offline lokal secara aman.',
+            'warning'
+          );
+        } finally {
+          setSyncing(false);
+        }
       } else {
         // Run monthly billing generator in offline mode
         mockDB.generateMonthlyInvoices();
+        syncFromDatabase();
       }
-
-      // 3. Populate state
-      syncFromDatabase();
     };
 
     initApp();
@@ -315,23 +336,39 @@ export default function App() {
     mockDB.setOnlineMode(next);
     if (next) {
       setSyncing(true);
-      await mockDB.pullFromFirestore();
-      syncFromDatabase();
-      setSyncing(false);
+      try {
+        await mockDB.pullFromFirestore();
+        syncFromDatabase();
+        triggerNotification(
+          'Model Cloud Online',
+          'Koneksi real-time cloud data sinkron telah diaktifkan.',
+          'success'
+        );
+      } catch (error) {
+        console.warn("Could not transition to cloud sync seamlessly:", error);
+        triggerNotification(
+          'Gagal Beralih Online',
+          'Koneksi Firestore tidak merespon (unreachable/timeout). Sistem otomatis kembali menggunakan database lokal.',
+          'danger'
+        );
+      } finally {
+        setSyncing(false);
+      }
+    } else {
+      triggerNotification(
+        'Model Lokal Offline',
+        'Mode hemat bandwidth luring aktif. Data dicadangkan ke localStorage kookies.',
+        'warning'
+      );
     }
-    triggerNotification(
-      next ? 'Model Cloud Online' : 'Model Lokal Offline',
-      next ? 'Koneksi real-time cloud data sinkron telah diaktifkan.' : 'Mode hemat bandwidth luring aktif. Data dicadangkan ke localStorage kookies.',
-      next ? 'success' : 'warning'
-    );
   };
 
   const unreadNotifCount = notifications.filter(n => !n.isRead).length;
 
   // Custom Handler: profile switching logs in or switches roles seamlessly
-  const handleSelectUserProfile = (user: typeof users[0]) => {
+  const handleSelectUserProfile = (user: any) => {
     setCurrentUser(user);
-    setMPinInput('112233'); // Auto-fill pin for instant bypass ease of use
+    setMPinInput(user.pin || '112233'); // Auto-fill pin for instant bypass ease of use
     triggerNotification(
       'Profil Terpilih',
       `Menulis pin otomatis untuk akun ${user.name} (${user.role}). Klik Login untuk konfirmasi.`,
@@ -340,6 +377,17 @@ export default function App() {
   };
 
   const handleManualLogin = () => {
+    const requiredPin = currentUser.pin || '112233';
+    if (mPinInput !== requiredPin) {
+      triggerNotification(
+        'PIN Salah',
+        `MPIN yang dimasukkan salah untuk akun ${currentUser.name}. Silakan coba lagi.`,
+        'danger'
+      );
+      setMPinInput('');
+      return;
+    }
+
     setIsLoggedIn(true);
     triggerNotification(
       'Login Berhasil',
@@ -420,6 +468,10 @@ export default function App() {
                 );
               })}
             </div>
+            <div className="pt-2 text-left border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>PIN AKTIF <strong className="text-red-400">{currentUser.name.split(' ')[0]}</strong>:</span>
+              <span className="bg-slate-900 px-2 py-0.5 rounded text-white font-black tracking-widest">{currentUser.pin || '112233'}</span>
+            </div>
           </div>
 
           {/* Keypad pin controller */}
@@ -478,7 +530,7 @@ export default function App() {
                 id="btn-keypad-biometric"
                 type="button"
                 onClick={() => {
-                  setMPinInput('112233');
+                  setMPinInput(currentUser.pin || '112233');
                   triggerNotification('Biometrics Valid', 'Sidik Jari / FaceID terdeteksi sah.', 'success');
                 }}
                 className="bg-slate-900 hover:bg-slate-800 text-emerald-500 text-xs py-1.5 px-3 rounded-xl border border-slate-850 transition flex items-center justify-center cursor-pointer"

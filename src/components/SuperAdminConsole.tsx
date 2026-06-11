@@ -25,6 +25,7 @@ interface SystemUser {
   avatar: string;
   joinDate: string;
   status: 'Aktif' | 'Ditangguhkan';
+  pin: string;
 }
 
 interface RolePermission {
@@ -59,6 +60,7 @@ export default function SuperAdminConsole({
   const [newUserName, setNewUserName] = useState('');
   const [newUserEmail, setNewUserEmail] = useState('');
   const [newUserRole, setNewUserRole] = useState<UserRole>('Sales');
+  const [newUserPin, setNewUserPin] = useState('112233');
   const [showAddModal, setShowAddModal] = useState(false);
 
   // Active view: 'users' | 'rules' | 'logs'
@@ -90,7 +92,8 @@ export default function SuperAdminConsole({
       role: newUserRole,
       avatar: newUserName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
       joinDate: new Date().toISOString().split('T')[0],
-      status: 'Aktif'
+      status: 'Aktif',
+      pin: newUserPin || '112233'
     };
 
     setUsers([...users, newUser]);
@@ -116,7 +119,45 @@ export default function SuperAdminConsole({
     setNewUserName('');
     setNewUserEmail('');
     setNewUserRole('Sales');
+    setNewUserPin('112233');
     setShowAddModal(false);
+  };
+
+  // Handler to update user pin dynamically
+  const handleUserPinChange = (userId: string, newPin: string) => {
+    const updatedUsers = users.map(u => {
+      if (u.id === userId) {
+        const updated = { ...u, pin: newPin };
+        if (u.id === currentUser.id) {
+          setTimeout(() => {
+            setCurrentUser(updated);
+          }, 100);
+        }
+        return updated;
+      }
+      return u;
+    });
+
+    setUsers(updatedUsers);
+
+    if (newPin.length === 6) {
+      const targetUser = users.find(u => u.id === userId);
+      const newLog = {
+        id: 'log-' + Date.now(),
+        timestamp: new Date().toISOString().replace('T', ' ').split('.')[0],
+        actor: `${currentUser.name} (${currentUser.role})`,
+        action: `Mengubah PIN Masuk (${newPin})`,
+        target: targetUser ? targetUser.name : 'Pengguna',
+        severity: 'high' as const
+      };
+      setAuditLogs(prev => [newLog, ...prev]);
+
+      onAddNotification(
+        'PIN Diperbarui',
+        `Kredensial login untuk ${targetUser ? targetUser.name : 'Pengguna'} berhasil diperbarui menjadi ${newPin}.`,
+        'success'
+      );
+    }
   };
 
   // Handler to update roles dynamically
@@ -304,6 +345,7 @@ export default function SuperAdminConsole({
                   <th className="p-4">Staff Pengguna</th>
                   <th className="p-4">Email Instansi</th>
                   <th className="p-4">Peran Hak Akses</th>
+                  <th className="p-4">PIN Masuk</th>
                   <th className="p-4">Tgl Bergabung</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 text-center">Tindakan</th>
@@ -336,6 +378,17 @@ export default function SuperAdminConsole({
                           <option value="Admin"> Admin Cabang </option>
                           <option value="Sales"> Agen Sales </option>
                         </select>
+                      </td>
+                      <td className="p-4">
+                        <input
+                          id={`user-pin-input-${u.id}`}
+                          type="text"
+                          maxLength={6}
+                          value={u.pin || ''}
+                          onChange={(e) => handleUserPinChange(u.id, e.target.value.replace(/\D/g, ''))}
+                          placeholder="112233"
+                          className="bg-slate-50 text-slate-800 text-[11px] py-1 px-1.5 rounded-lg border border-slate-250 outline-none font-mono font-bold w-16 text-center focus:bg-white focus:border-red-600 transition"
+                        />
                       </td>
                       <td className="p-4 text-slate-500 font-mono text-[11px]">{u.joinDate}</td>
                       <td className="p-4">
@@ -588,6 +641,21 @@ export default function SuperAdminConsole({
                   <option value="Admin">🛡️ Admin Cabang</option>
                   <option value="Sales">📈 Agen Sales</option>
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-slate-500 font-bold">PIN Masuk 6-Angka (MPIN)</label>
+                <input
+                  id="add-pin-input"
+                  type="text"
+                  required
+                  maxLength={6}
+                  placeholder="Mis: 112233"
+                  value={newUserPin}
+                  onChange={(e) => setNewUserPin(e.target.value.replace(/\D/g, ''))}
+                  className="w-full bg-slate-50 text-slate-800 text-xs py-2 px-3 rounded-lg border border-slate-200 outline-none focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all font-mono font-bold"
+                />
+                <p className="text-[10px] text-slate-400 mt-0.5">Kode MPIN berupa 6 digit angka untuk keamanan masuk portal.</p>
               </div>
 
               <div className="pt-3 border-t flex gap-2">

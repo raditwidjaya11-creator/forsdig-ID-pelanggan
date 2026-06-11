@@ -1,8 +1,133 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Global Safety Net (first rule is default-deny)
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if false;
+    }
+
+    // Auth Utilities
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity Object Validation Primitives
+    function isValidCustomer(data) {
+      return data.id is string
+        && data.customerId is string
+        && data.name is string && data.name.size() <= 150
+        && data.phone is string && data.phone.size() <= 30
+        && data.email is string && data.email.size() <= 150
+        && data.nik is string && data.nik.size() <= 50
+        && data.status in ['Aktif', 'Nonaktif'];
+    }
+
+    function isValidInvoice(data) {
+      return data.id is string
+        && data.invoiceNumber is string
+        && data.customerId is string
+        && data.customerName is string
+        && data.packageName is string
+        && data.amount is number
+        && data.status in ['Lunas', 'Belum Bayar', 'Terlambat'];
+    }
+
+    function isValidPackage(data) {
+      return data.id is string
+        && data.name is string
+        && data.price is number
+        && data.duration is number
+        && data.status in ['Aktif', 'Tidak Aktif'];
+    }
+
+    function isValidSales(data) {
+      return data.id is string
+        && data.name is string
+        && data.email is string
+        && data.commissionRate is number
+        && data.targetSales is number;
+    }
+
+    function isValidCommission(data) {
+      return data.id is string
+        && data.salesId is string
+        && data.salesName is string
+        && data.customerId is string
+        && data.customerName is string
+        && data.invoiceId is string
+        && data.amount is number
+        && data.percentage is number
+        && data.status in ['Pending', 'Dibayarkan'];
+    }
+
+    function isValidNotification(data) {
+      return data.id is string
+        && data.type in ['info', 'success', 'warning', 'danger']
+        && data.title is string
+        && data.message is string
+        && data.isRead is bool;
+    }
+
+    function isValidEmployee(data) {
+      return data.id is string
+        && data.employeeId is string
+        && data.name is string
+        && data.position is string
+        && data.department is string
+        && data.status in ['Aktif', 'Nonaktif'];
+    }
+
+    function isValidAttendance(data) {
+      return data.id is string
+        && data.employeeId is string
+        && data.date is string
+        && data.checkIn is string;
+    }
+
+    // Match Collections Rules
+    match /customers/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidCustomer(request.resource.data));
+    }
+
+    match /invoices/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidInvoice(request.resource.data));
+    }
+
+    match /servicePackages/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidPackage(request.resource.data));
+    }
+
+    match /salesRepresentatives/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidSales(request.resource.data));
+    }
+
+    match /commissionReceipts/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidCommission(request.resource.data));
+    }
+
+    match /notifications/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidNotification(request.resource.data));
+    }
+
+    match /employees/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidEmployee(request.resource.data));
+    }
+
+    match /attendance/{id} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(id) && (request.resource == null || isValidAttendance(request.resource.data));
     }
   }
 }

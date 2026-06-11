@@ -949,7 +949,7 @@ export const mockDB = {
 
   getOnlineMode: (): boolean => {
     const stored = localStorage.getItem(KEYS.ONLINE_MODE);
-    return stored ? stored === 'true' : false; // Default offline, simulate sync
+    return stored ? stored === 'true' : true; // Default online, integrate with Firestore
   },
   setOnlineMode: (mode: boolean) => {
     localStorage.setItem(KEYS.ONLINE_MODE, String(mode));
@@ -1048,16 +1048,8 @@ export const mockDB = {
   // Pulls records from Cloud Firestore and synchronizes localStorage
   pullFromFirestore: async () => {
     try {
-      const [
-        livePackages, 
-        liveSales, 
-        liveCustomers, 
-        liveInvoices, 
-        liveCommissions, 
-        liveNotifications,
-        liveEmployees,
-        liveAttendance
-      ] = await Promise.all([
+      // Fetch promises from Firestore
+      const fetchPromise = Promise.all([
         firestoreService.getPackages(),
         firestoreService.getSales(),
         firestoreService.getCustomers(),
@@ -1067,6 +1059,23 @@ export const mockDB = {
         firestoreService.getEmployees(),
         firestoreService.getAttendances()
       ]);
+
+      // 4-second timeout promise
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Koneksi Firestore Timeout (4s)')), 4000)
+      );
+
+      // Race the fetch operation against the timeout
+      const [
+        livePackages, 
+        liveSales, 
+        liveCustomers, 
+        liveInvoices, 
+        liveCommissions, 
+        liveNotifications,
+        liveEmployees,
+        liveAttendance
+      ] = await Promise.race([fetchPromise, timeoutPromise]);
 
       // If online data is completely empty, seed standard assets automatically so workspace opens loaded
       if (livePackages.length === 0 && liveSales.length === 0 && liveCustomers.length === 0 && liveEmployees.length === 0) {
@@ -1094,7 +1103,9 @@ export const mockDB = {
       if (liveEmployees.length > 0) localStorage.setItem(KEYS.EMPLOYEES, JSON.stringify(liveEmployees));
       if (liveAttendance.length > 0) localStorage.setItem(KEYS.ATTENDANCE, JSON.stringify(liveAttendance));
     } catch (e) {
-      console.error("Sync error during pullFromFirestore operation:", e);
+      console.warn("Sync warning during pullFromFirestore operation (falling back to offline local storage cache):", e);
+      // Ensure we re-throw if caller expects it, to trigger offline message or cancel spinner
+      throw e;
     }
   }
 };

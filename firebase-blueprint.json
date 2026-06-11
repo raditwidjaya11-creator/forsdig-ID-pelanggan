@@ -131,6 +131,52 @@
         "isRead": { "type": "boolean" }
       },
       "required": ["id", "type", "title", "message", "createdAt", "isRead"]
+    },
+    "Employee": {
+      "title": "Employee",
+      "description": "Staff ID and metadata",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "name": { "type": "string" },
+        "position": { "type": "string" },
+        "department": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "photo": { "type": "string" },
+        "status": { "type": "string", "enum": ["Aktif", "Nonaktif"] },
+        "branch": { "type": "string" },
+        "address": { "type": "string" },
+        "joinDate": { "type": "string" },
+        "supervisor": { "type": "string" },
+        "qrCode": { "type": "string" },
+        "barcode": { "type": "string" },
+        "cardNumber": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "targetPenjualan": { "type": "number" },
+        "masaBerlaku": { "type": "string" },
+        "emergencyContact": { "type": "string" }
+      },
+      "required": ["id", "employeeId", "name", "position", "department", "phone", "email", "photo", "status", "branch", "address", "joinDate", "supervisor", "qrCode", "barcode", "cardNumber", "createdAt"]
+    },
+    "Attendance": {
+      "title": "Attendance",
+      "description": "Daily clock-in selfie records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "employeeId": { "type": "string" },
+        "employeeName": { "type": "string" },
+        "position": { "type": "string" },
+        "date": { "type": "string" },
+        "checkIn": { "type": "string" },
+        "checkOut": { "type": "string" },
+        "latitude": { "type": "string" },
+        "longitude": { "type": "string" },
+        "selfiePhoto": { "type": "string" }
+      },
+      "required": ["id", "employeeId", "date", "checkIn", "latitude", "longitude", "selfiePhoto"]
     }
   },
   "firestore": {
@@ -157,6 +203,14 @@
     "notifications": {
       "schema": "AppNotification",
       "description": "Operational and billing alert feed"
+    },
+    "employees": {
+      "schema": "Employee",
+      "description": "Employee profiles collection"
+    },
+    "attendance": {
+      "schema": "Attendance",
+      "description": "Daily employee attendance records"
     }
   }
 }
