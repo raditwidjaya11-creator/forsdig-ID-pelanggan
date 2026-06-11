@@ -1,0 +1,6 @@
+{
+  "name": "CustomerPro",
+  "description": "Sistem CRM dan Penagihan Pelanggan SaaS Premium bertema merah modern dengan dashboard interaktif, manajemen sales, komisi, QR scanner, dan digital member card.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,162 @@
+{
+  "entities": {
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer record with service package, branches, and contact information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Customer ID consistent with Firestore document ID" },
+        "customerId": { "type": "string", "description": "Format CP-XXXX auto ID" },
+        "name": { "type": "string", "description": "Full name of the customer" },
+        "phone": { "type": "string", "description": "Active phone number of the customer" },
+        "email": { "type": "string", "description": "Work/personal email of the customer" },
+        "nik": { "type": "string", "description": "ID number / NIK (Nomor Induk Kependudukan)" },
+        "gender": { "type": "string", "enum": ["Laki-laki", "Perempuan"] },
+        "birthDate": { "type": "string" },
+        "photoUrl": { "type": "string" },
+        "status": { "type": "string", "enum": ["Aktif", "Nonaktif"] },
+        "alamat": {
+          "type": "object",
+          "description": "Full address detail structured",
+          "properties": {
+            "provinsi": { "type": "string" },
+            "kabupaten": { "type": "string" },
+            "kecamatan": { "type": "string" },
+            "desa": { "type": "string" },
+            "alamatLengkap": { "type": "string" },
+            "kodePos": { "type": "string" }
+          }
+        },
+        "packageName": { "type": "string" },
+        "price": { "type": "number" },
+        "startDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["Lunas", "Belum Bayar", "Terlambat"] },
+        "salesId": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "notes": { "type": "array" },
+        "packageHistory": { "type": "array" },
+        "gpsLocation": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "cabang": { "type": "string" },
+        "perusahaan": { "type": "string" }
+      },
+      "required": ["id", "customerId", "name", "phone", "email", "nik", "gender", "status", "alamat", "packageName", "price", "startDate", "dueDate", "paymentStatus", "salesId", "createdAt", "cabang", "perusahaan"]
+    },
+    "Invoice": {
+      "title": "Invoice",
+      "description": "Monthly invoice generated for a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "invoiceNumber": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "packageName": { "type": "string" },
+        "amount": { "type": "number" },
+        "dueDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["Lunas", "Belum Bayar", "Terlambat"] },
+        "createdAt": { "type": "string" },
+        "paidAt": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "whatsappSent": { "type": "boolean" },
+        "emailSent": { "type": "boolean" }
+      },
+      "required": ["id", "invoiceNumber", "customerId", "customerName", "packageName", "amount", "dueDate", "status", "createdAt"]
+    },
+    "ServicePackage": {
+      "title": "ServicePackage",
+      "description": "Broadband / service packages library",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "duration": { "type": "number" },
+        "features": { "type": "array" },
+        "status": { "type": "string", "enum": ["Aktif", "Tidak Aktif"] }
+      },
+      "required": ["id", "name", "price", "duration", "features", "status"]
+    },
+    "SalesRepresentative": {
+      "title": "SalesRepresentative",
+      "description": "Commission and target record for a sales rep",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "commissionRate": { "type": "number" },
+        "targetSales": { "type": "number" },
+        "totalCustomers": { "type": "number" },
+        "totalCommissionEarned": { "type": "number" },
+        "cabang": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "email", "commissionRate", "targetSales", "totalCustomers", "totalCommissionEarned", "cabang"]
+    },
+    "CommissionReceipt": {
+      "title": "CommissionReceipt",
+      "description": "Commissions earned based on paid invoice",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "salesId": { "type": "string" },
+        "salesName": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "invoiceId": { "type": "string" },
+        "amount": { "type": "number" },
+        "percentage": { "type": "number" },
+        "date": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pending", "Dibayarkan"] }
+      },
+      "required": ["id", "salesId", "salesName", "customerId", "customerName", "invoiceId", "amount", "percentage", "date", "status"]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "In-app system notifications",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "danger"] },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "isRead": { "type": "boolean" }
+      },
+      "required": ["id", "type", "title", "message", "createdAt", "isRead"]
+    }
+  },
+  "firestore": {
+    "customers": {
+      "schema": "Customer",
+      "description": "Customer profile collection"
+    },
+    "invoices": {
+      "schema": "Invoice",
+      "description": "Billing invoices collection"
+    },
+    "servicePackages": {
+      "schema": "ServicePackage",
+      "description": "Active broadband tier list"
+    },
+    "salesRepresentatives": {
+      "schema": "SalesRepresentative",
+      "description": "Sales agent profiling collection"
+    },
+    "commissionReceipts": {
+      "schema": "CommissionReceipt",
+      "description": "Commissions earned tracking ledger"
+    },
+    "notifications": {
+      "schema": "AppNotification",
+      "description": "Operational and billing alert feed"
+    }
+  }
+}
