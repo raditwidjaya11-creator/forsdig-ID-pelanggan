@@ -2,9 +2,9 @@
   "apiKey": "AIzaSyCo9ToJMFY8-BqeB3TQTPBcrRKy55ZG5S8",
   "authDomain": "forsdig-billing.firebaseapp.com",
   "projectId": "forsdig-billing",
-  "firestoreDatabaseId": "default",
   "storageBucket": "forsdig-billing.firebasestorage.app",
+  "firestoreDatabaseId": "default",
   "messagingSenderId": "734843536605",
-  "appId": "1:734843536605:web:0d800c351351ab221b8734"
+  "appId": "1:734843536605:web:0d800c351351ab221b8734",
   "measurementId": ""
 }
