@@ -1794,7 +1794,7 @@ export default function EmployeeManagement({
             
             {/* PRINT OPTION 1: CR80 PVC Standard layout dimensions in real world scale */}
             {printLayout === 'pvc' && singlePrintEmp && (
-              <div className="flex flex-col md:flex-row items-center justify-center gap-6 print:border-none p-6 bg-slate-900 rounded-2xl border border-slate-700 print:bg-white print:p-0">
+              <div className="printable-sheet flex flex-col md:flex-row items-center justify-center gap-6 print:border-none p-6 bg-slate-900 rounded-2xl border border-slate-700 print:bg-white print:p-0">
                 
                 {/* ID Front */}
                 <div id="print-pvc-front" className="print-card relative w-[241.2px] h-[352.8px] bg-white border border-slate-400 rounded-[12px] overflow-hidden flex flex-col justify-between shadow-2xl print:shadow-none shrink-0 print:m-0">
@@ -1861,7 +1861,7 @@ export default function EmployeeManagement({
 
             {/* PRINT OPTION 2: A4 Sheet for Bulk printing multiple cards on single sheet */}
             {printLayout === 'a4' && (
-              <div className="bg-white p-[1.0cm] w-[21.0cm] h-[29.7cm] shadow-xl text-slate-900 flex flex-col justify-between font-sans print:shadow-none print:p-[0.5cm] select-none scale-90 md:scale-100">
+              <div className="printable-sheet bg-white p-[1.0cm] w-[21.0cm] h-[29.7cm] shadow-xl text-slate-900 flex flex-col justify-between font-sans print:shadow-none print:p-[0.5cm] select-none scale-90 md:scale-100">
                 
                 <div className="space-y-4">
                   
@@ -1941,24 +1941,39 @@ export default function EmployeeManagement({
           transform: rotateY(180deg);
         }
         @media print {
-          /* Hide everything except the printable container block */
-          body > *, #root, header, main, footer, .print\\:hidden, #employee-crud-modal, #digital-id-card-modal, #print-layout-modal {
+          /* Apply a clean white canvas for physical layout prints */
+          html, body {
+            background: white !important;
+            color: black !important;
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+          }
+          
+          /* Hide everything in the document by default using visibility */
+          body * {
+            visibility: hidden !important;
+          }
+          
+          /* Reveal ONLY print target containers and their children */
+          .digital-id-print-area, .digital-id-print-area *,
+          .printable-sheet, .printable-sheet * {
+            visibility: visible !important;
+          }
+          
+          /* Hide print:hidden sections explicitly */
+          .print\\:hidden, .print\\:hidden * {
             display: none !important;
             visibility: hidden !important;
           }
-          /* Override browser layout for high resolution portrait PDF prints */
-          @page {
-            size: portrait;
-            margin: 0;
-          }
-          body {
-            background: white !important;
-            color: black !important;
-          }
+          
+          /* Center single ID card dynamically on the printed page */
           .digital-id-print-area {
             display: flex !important;
             visibility: visible !important;
-            position: absolute !important;
+            position: fixed !important;
             left: 0 !important;
             top: 0 !important;
             width: 100vw !important;
@@ -1968,10 +1983,43 @@ export default function EmployeeManagement({
             background: white !important;
             margin: 0 !important;
             padding: 0 !important;
-            gap: 40px !important;
+            gap: 48px !important;
+            z-index: 99999 !important;
           }
-          .digital-id-print-area * {
+          
+          /* Position printable sheet for standard/bulk print layouts */
+          .printable-sheet {
+            display: flex !important;
             visibility: visible !important;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%) !important;
+            background: white !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            z-index: 99999 !important;
+          }
+
+          /* For A4 bulk sheet, prevent centering shift since it already fills the paper */
+          div.printable-sheet[class*="h-[29.7cm]"] {
+            left: 0 !important;
+            top: 0 !important;
+            transform: none !important;
+            padding: 0.5cm !important;
+            margin: 0 !important;
+          }
+          
+          /* Optimize graphic colors and background fills rendering to physical printer/PDF */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          
+          @page {
+            size: portrait;
+            margin: 0;
           }
         }
       `}} />

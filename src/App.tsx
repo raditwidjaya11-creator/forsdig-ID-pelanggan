@@ -42,11 +42,11 @@ import {
 
 export default function App() {
   // Authentication & Multi-user state structure
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true); // Logged in inside demo, but fully realistic logout/login portal supported
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // Start locked down by default to respect credentials
   const [users, setUsers] = useState<any[]>([
     { id: 'usr-1', name: 'Radit Widjaya', email: 'superadmin@foresyndo.co.id', role: 'Super Admin' as UserRole, avatar: 'RW', joinDate: '2025-01-10', status: 'Aktif' as const, pin: '112233' },
-    { id: 'usr-2', name: 'Andi Wijaya', email: 'andi.sales@foresyndo.co.id', role: 'Sales' as UserRole, avatar: 'AW', joinDate: '2025-03-24', status: 'Aktif' as const, pin: '112233' },
-    { id: 'usr-3', name: 'Jakarta Admin', email: 'admin.jakarta@foresyndo.co.id', role: 'Admin' as UserRole, avatar: 'JA', joinDate: '2025-02-15', status: 'Aktif' as const, pin: '112233' }
+    { id: 'usr-2', name: 'Andi Wijaya', email: 'andi.sales@foresyndo.co.id', role: 'Sales' as UserRole, avatar: 'AW', joinDate: '2025-03-24', status: 'Aktif' as const, pin: '223344' },
+    { id: 'usr-3', name: 'Jakarta Admin', email: 'admin.jakarta@foresyndo.co.id', role: 'Admin' as UserRole, avatar: 'JA', joinDate: '2025-02-15', status: 'Aktif' as const, pin: '334455' }
   ]);
   const [currentUser, setCurrentUser] = useState<any>(users[0]);
   const [mPinInput, setMPinInput] = useState<string>('');
@@ -368,12 +368,7 @@ export default function App() {
   // Custom Handler: profile switching logs in or switches roles seamlessly
   const handleSelectUserProfile = (user: any) => {
     setCurrentUser(user);
-    setMPinInput(user.pin || '112233'); // Auto-fill pin for instant bypass ease of use
-    triggerNotification(
-      'Profil Terpilih',
-      `Menulis pin otomatis untuk akun ${user.name} (${user.role}). Klik Login untuk konfirmasi.`,
-      'info'
-    );
+    setMPinInput(''); // Clean PIN input to require manual security entry
   };
 
   const handleManualLogin = () => {
@@ -420,6 +415,54 @@ export default function App() {
     else if (dest === 'superadmin') setActiveTab('SuperAdmin');
   };
 
+  // Helper to determine if a selected tab is authorized for the given role
+  const isTabAuthorized = (tab: string, role: string): boolean => {
+    switch (tab) {
+      case 'Dashboard':
+      case 'Pelanggan':
+      case 'Premium':
+        return true;
+      case 'Pegawai':
+      case 'Tagihan':
+      case 'SistemPaket':
+      case 'Laporan':
+        return role === 'Super Admin' || role === 'Admin';
+      case 'Sales':
+        return role === 'Super Admin' || role === 'Sales';
+      case 'SuperAdmin':
+        return role === 'Super Admin';
+      default:
+        return false;
+    }
+  };
+
+  // Dedicated elegant block to render when a user is locked out due to permissions
+  const renderAccessDenied = (tabName: string) => (
+    <div className="bg-white border border-slate-100 rounded-3xl p-12 text-center max-w-xl mx-auto shadow-xl space-y-6 animate-fade-in my-10">
+      <div className="w-16 h-16 bg-red-50/80 rounded-2xl flex items-center justify-center mx-auto text-red-650 shadow-inner">
+        <Lock className="h-8 w-8 text-red-650" />
+      </div>
+      <div className="space-y-2">
+        <h3 className="text-xl font-extrabold text-slate-900 leading-none">Akses Terbatas (Locked Area)</h3>
+        <p className="text-sm text-slate-500 max-w-md mx-auto leading-relaxed">
+          Akreditasi akun Anda sebagai <strong className="text-red-600 font-bold uppercase font-mono text-[10px] bg-red-50 px-2 py-0.5 rounded border border-red-150">{currentUser.role}</strong> tidak memiliki otorisasi untuk mengakses modul <span className="font-extrabold text-slate-800">{tabName}</span>.
+        </p>
+      </div>
+      <div className="pt-2">
+        <button
+          id="btn-access-denied-home"
+          onClick={() => {
+            setActiveTab('Dashboard');
+            setMobileView('home');
+          }}
+          className="bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs py-2.5 px-5 rounded-xl transition cursor-pointer"
+        >
+          KEMBALI KE DASHBOARD UTAMA
+        </button>
+      </div>
+    </div>
+  );
+
   // 1. VIEW ENGINE: NOT LOGGED IN
   if (!isLoggedIn) {
     return (
@@ -441,36 +484,49 @@ export default function App() {
           </div>
 
           <div className="border border-slate-800 rounded-2xl p-4 bg-slate-950/60 space-y-3">
-            <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider text-left">
-              Pilih Akun Demo Instan (Sistem Multi-User):
+            <label htmlFor="login-user-select" className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider text-left">
+              Pilih Akun Pegawai (Sistem Multi-User):
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {users.map((u) => {
-                const isSelected = u.id === currentUser.id;
-                return (
-                  <button
-                    id={`btn-login-preset-${u.id}`}
-                    key={u.id}
-                    type="button"
-                    onClick={() => handleSelectUserProfile(u)}
-                    className={`p-2.5 rounded-xl border text-center transition cursor-pointer flex flex-col items-center justify-between ${
-                      isSelected 
-                        ? 'bg-red-500/10 border-red-500 text-white' 
-                        : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="h-8 w-8 rounded-full bg-slate-800 flex items-center justify-center font-bold text-xs mb-1 text-white shadow">
-                      {u.avatar}
-                    </div>
-                    <span className="text-[10px] font-extrabold truncate w-full block">{u.name.split(' ')[0]}</span>
-                    <span className="text-[8px] opacity-70 block font-mono mt-0.5 uppercase tracking-tighter truncate w-full">{u.role}</span>
-                  </button>
-                );
-              })}
-            </div>
-            <div className="pt-2 text-left border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-mono">
-              <span>PIN AKTIF <strong className="text-red-400">{currentUser.name.split(' ')[0]}</strong>:</span>
-              <span className="bg-slate-900 px-2 py-0.5 rounded text-white font-black tracking-widest">{currentUser.pin || '112233'}</span>
+            <select
+              id="login-user-select"
+              value={currentUser.id}
+              onChange={(e) => {
+                const targetUser = users.find(u => u.id === e.target.value);
+                if (targetUser) {
+                  setCurrentUser(targetUser);
+                  setMPinInput(''); // Ensure pin is manually typed
+                  triggerNotification(
+                    'Akun Dipilih',
+                    `Masukkan 6-digit MPIN keamanan untuk login sebagai ${targetUser.name}.`,
+                    'info'
+                  );
+                }
+              }}
+              className="w-full bg-slate-900 text-xs text-white border border-slate-800 rounded-xl p-3 focus:ring-1 focus:ring-red-500 focus:outline-none focus:border-red-500 cursor-pointer font-bold"
+            >
+              {users.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({u.role}) — {u.email}
+                </option>
+              ))}
+            </select>
+            
+            <div className="bg-slate-950/80 p-3 rounded-xl border border-slate-900 text-left space-y-1.5">
+              <span className="block text-[9.5px] font-black text-red-500 font-mono uppercase tracking-wider">🔑 KREDENSI AKSES MASUK:</span>
+              <div className="grid grid-cols-3 gap-2 text-[9px] text-slate-400 font-mono">
+                <div>
+                  <span className="block font-bold text-slate-200">Super Admin</span>
+                  <span>PIN: <strong>112233</strong></span>
+                </div>
+                <div>
+                  <span className="block font-bold text-slate-200">Sales</span>
+                  <span>PIN: <strong>223344</strong></span>
+                </div>
+                <div>
+                  <span className="block font-bold text-slate-200">Admin</span>
+                  <span>PIN: <strong>334455</strong></span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -514,9 +570,10 @@ export default function App() {
                 id="btn-keypad-clear"
                 type="button"
                 onClick={() => setMPinInput('')}
-                className="bg-slate-900 hover:bg-slate-800 text-red-500 text-[10px] py-1.5 px-2 rounded-xl border border-slate-800 transition text-center font-bold uppercase cursor-pointer"
+                className="bg-slate-900 hover:bg-slate-800 text-slate-400 text-[10px] py-1.5 px-2 rounded-xl border border-slate-800 transition text-center font-bold uppercase cursor-pointer"
+                title="Reset Input"
               >
-                Hapus
+                Reset
               </button>
               <button
                 id="btn-keypad-0"
@@ -527,16 +584,13 @@ export default function App() {
                 0
               </button>
               <button
-                id="btn-keypad-biometric"
+                id="btn-keypad-backspace"
                 type="button"
-                onClick={() => {
-                  setMPinInput(currentUser.pin || '112233');
-                  triggerNotification('Biometrics Valid', 'Sidik Jari / FaceID terdeteksi sah.', 'success');
-                }}
-                className="bg-slate-900 hover:bg-slate-800 text-emerald-500 text-xs py-1.5 px-3 rounded-xl border border-slate-850 transition flex items-center justify-center cursor-pointer"
-                title="Bypass dengan FaceID / Sidik Jari"
+                onClick={() => setMPinInput(prev => prev.slice(0, -1))}
+                className="bg-slate-900 hover:bg-slate-800 text-red-500 text-[10px] py-1.5 px-2 rounded-xl border border-slate-800 transition text-center font-bold uppercase cursor-pointer"
+                title="Hapus Satu Angka"
               >
-                <Smartphone className="h-4 w-4 shrink-0" />
+                Hapus
               </button>
             </div>
           </div>
@@ -689,8 +743,14 @@ export default function App() {
 
                   <button
                     id="m-btn-invoices"
-                    onClick={() => navigateMobile('invoices')}
-                    className="flex flex-col items-center cursor-pointer group"
+                    onClick={() => {
+                      if (currentUser.role === 'Super Admin' || currentUser.role === 'Admin') {
+                        navigateMobile('invoices');
+                      } else {
+                        triggerNotification('Akses Terbatas', 'Peran Anda tidak diizinkan membuka modul Tagihan.', 'danger');
+                      }
+                    }}
+                    className={`flex flex-col items-center cursor-pointer group ${!(currentUser.role === 'Super Admin' || currentUser.role === 'Admin') ? 'opacity-40' : ''}`}
                   >
                     <div className="h-11 w-11 rounded-2xl bg-slate-900 border border-slate-800 hover:border-red-600 transition flex items-center justify-center text-red-550 text-red-500 shadow-md">
                       <Bell className="h-5 w-5 font-bold" />
@@ -717,10 +777,16 @@ export default function App() {
 
                   <button
                     id="m-btn-sales"
-                    onClick={() => navigateMobile('sales')}
-                    className="flex flex-col items-center cursor-pointer group"
+                    onClick={() => {
+                      if (currentUser.role === 'Super Admin' || currentUser.role === 'Sales') {
+                        navigateMobile('sales');
+                      } else {
+                        triggerNotification('Akses Terbatas', 'Peran Anda tidak diizinkan membuka modul Komisi Sales.', 'danger');
+                      }
+                    }}
+                    className={`flex flex-col items-center cursor-pointer group ${!(currentUser.role === 'Super Admin' || currentUser.role === 'Sales') ? 'opacity-40' : ''}`}
                   >
-                    <div className="h-11 w-11 rounded-2xl bg-slate-900 border border-slate-800 hover:border-red-600 transition flex items-center justify-center text-red-550 text-red-500 shadow-md">
+                    <div className="h-11 w-11 rounded-2xl bg-slate-900 border border-slate-800 hover:border-red-650 transition flex items-center justify-center text-red-550 text-red-500 shadow-md">
                       <CreditCard className="h-5 w-5" />
                     </div>
                     <span className="text-[9.5px] font-bold text-slate-300 mt-1.5 text-center leading-tight">Sales & Komisi</span>
@@ -1087,6 +1153,7 @@ export default function App() {
             setIsOnline={toggleOnlineMode}
             notificationCount={unreadNotifCount}
             setShowNotifications={setShowNotifDropdown}
+            currentUser={currentUser}
           />
 
           {/* 2. MAIN APPLICATION CONTAINER */}
@@ -1260,117 +1327,123 @@ export default function App() {
 
             {/* 3. DOCK SUBTAB CONTEXT RENDERING ENGINES */}
             <main className="flex-1 p-6 space-y-6 max-w-7xl w-full mx-auto">
-              {activeTab === 'Dashboard' && (
-                <Dashboard 
-                  customers={customers} 
-                  invoices={invoices} 
-                  sales={sales} 
-                  packages={packages}
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                  generateInvoices={() => {
-                    mockDB.generateMonthlyInvoices();
-                    syncFromDatabase();
-                  }}
-                />
-              )}
+              {!isTabAuthorized(activeTab, currentUser.role) ? (
+                renderAccessDenied(activeTab)
+              ) : (
+                <>
+                  {activeTab === 'Dashboard' && (
+                    <Dashboard 
+                      customers={customers} 
+                      invoices={invoices} 
+                      sales={sales} 
+                      packages={packages}
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                      generateInvoices={() => {
+                        mockDB.generateMonthlyInvoices();
+                        syncFromDatabase();
+                      }}
+                    />
+                  )}
 
-              {activeTab === 'Pelanggan' && (
-                <CustomerManagement 
-                  customers={customers} 
-                  packages={packages} 
-                  sales={sales} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                  onSave={handleSaveCustomer} 
-                  onDelete={handleDeleteCustomer} 
-                />
-              )}
+                  {activeTab === 'Pelanggan' && (
+                    <CustomerManagement 
+                      customers={customers} 
+                      packages={packages} 
+                      sales={sales} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                      onSave={handleSaveCustomer} 
+                      onDelete={handleDeleteCustomer} 
+                    />
+                  )}
 
-              {activeTab === 'Pegawai' && (
-                <EmployeeManagement 
-                  employees={employees} 
-                  attendances={attendances} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                  onSaveEmployee={handleSaveEmployee} 
-                  onDeleteEmployee={handleDeleteEmployee} 
-                  onSaveAttendance={handleSaveAttendance} 
-                  onDeleteAttendance={handleDeleteAttendance} 
-                  isOnline={onlineMode} 
-                  onAddNotification={triggerNotification} 
-                />
-              )}
+                  {activeTab === 'Pegawai' && (
+                    <EmployeeManagement 
+                      employees={employees} 
+                      attendances={attendances} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                      onSaveEmployee={handleSaveEmployee} 
+                      onDeleteEmployee={handleDeleteEmployee} 
+                      onSaveAttendance={handleSaveAttendance} 
+                      onDeleteAttendance={handleDeleteAttendance} 
+                      isOnline={onlineMode} 
+                      onAddNotification={triggerNotification} 
+                    />
+                  )}
 
-              {activeTab === 'Tagihan' && (
-                <InvoiceManagement 
-                  invoices={invoices} 
-                  customers={customers} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                  onSaveInvoice={handleSaveInvoice} 
-                  onDeleteInvoice={handleDeleteInvoice} 
-                  onAddNotification={triggerNotification}
-                />
-              )}
+                  {activeTab === 'Tagihan' && (
+                    <InvoiceManagement 
+                      invoices={invoices} 
+                      customers={customers} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                      onSaveInvoice={handleSaveInvoice} 
+                      onDeleteInvoice={handleDeleteInvoice} 
+                      onAddNotification={triggerNotification}
+                    />
+                  )}
 
-              {activeTab === 'Sales' && (
-                <SalesManagement 
-                  sales={sales} 
-                  commissions={commissions} 
-                  customers={customers} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  onSaveSales={handleSaveSales} 
-                  onDeleteSales={handleDeleteSales} 
-                  onPayoutCommission={handlePayoutCommission}
-                />
-              )}
+                  {activeTab === 'Sales' && (
+                    <SalesManagement 
+                      sales={sales} 
+                      commissions={commissions} 
+                      customers={customers} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      onSaveSales={handleSaveSales} 
+                      onDeleteSales={handleDeleteSales} 
+                      onPayoutCommission={handlePayoutCommission}
+                    />
+                  )}
 
-              {activeTab === 'SistemPaket' && (
-                <SystemPackages 
-                  packages={packages} 
-                  activeRole={activeRole} 
-                  onSavePackage={handleSavePackage} 
-                  onDeletePackage={handleDeletePackage} 
-                />
-              )}
+                  {activeTab === 'SistemPaket' && (
+                    <SystemPackages 
+                      packages={packages} 
+                      activeRole={activeRole} 
+                      onSavePackage={handleSavePackage} 
+                      onDeletePackage={handleDeletePackage} 
+                    />
+                  )}
 
-              {activeTab === 'Premium' && (
-                <MarketingBlast 
-                  customers={customers} 
-                  packages={packages} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                />
-              )}
+                  {activeTab === 'Premium' && (
+                    <MarketingBlast 
+                      customers={customers} 
+                      packages={packages} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                    />
+                  )}
 
-              {activeTab === 'Laporan' && (
-                <Reports 
-                  customers={customers} 
-                  invoices={invoices} 
-                  sales={sales} 
-                  activeRole={activeRole} 
-                  selectedCabang={selectedCabang} 
-                  selectedPerusahaan={selectedPerusahaan} 
-                />
-              )}
+                  {activeTab === 'Laporan' && (
+                    <Reports 
+                      customers={customers} 
+                      invoices={invoices} 
+                      sales={sales} 
+                      activeRole={activeRole} 
+                      selectedCabang={selectedCabang} 
+                      selectedPerusahaan={selectedPerusahaan} 
+                    />
+                  )}
 
-              {activeTab === 'SuperAdmin' && (
-                <SuperAdminConsole 
-                  users={users} 
-                  setUsers={setUsers} 
-                  rolePermissions={rolePermissions} 
-                  setRolePermissions={setRolePermissions} 
-                  onAddNotification={triggerNotification}
-                  currentUser={currentUser}
-                  setCurrentUser={setCurrentUser}
-                />
+                  {activeTab === 'SuperAdmin' && (
+                    <SuperAdminConsole 
+                      users={users} 
+                      setUsers={setUsers} 
+                      rolePermissions={rolePermissions} 
+                      setRolePermissions={setRolePermissions} 
+                      onAddNotification={triggerNotification}
+                      currentUser={currentUser}
+                      setCurrentUser={setCurrentUser}
+                    />
+                  )}
+                </>
               )}
             </main>
 
