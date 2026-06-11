@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   Users, 
   UserCheck, 
@@ -15,7 +15,16 @@ import {
   Award,
   DollarSign,
   AlertTriangle,
-  Play
+  Play,
+  Calendar,
+  ShieldAlert,
+  ArrowUpRight,
+  TrendingDown,
+  Building2,
+  Clock,
+  Sparkles,
+  Layers,
+  ArrowRight
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -58,6 +67,33 @@ export default function Dashboard({
   
   // Demo Sales User ID is sales-1 (Andi Wijaya)
   const currentSalesId = 'sales-1';
+
+  // Live ticking clock in Indonesian WIB style
+  const [timeStr, setTimeStr] = useState('');
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+      const months = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+      
+      const dayName = days[now.getDay()];
+      const day = now.getDate();
+      const monthName = months[now.getMonth()];
+      const year = now.getFullYear();
+      
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      
+      setTimeStr(`${dayName}, ${day} ${monthName} ${year} • ${hours}:${minutes}:${seconds} WIB`);
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // 1. Context Filtering
   const filteredCustomers = useMemo(() => {
@@ -143,7 +179,7 @@ export default function Dashboard({
       counts[name].value += c.price;
     });
 
-    const COLORS = ['#DC2626', '#EA580C', '#2563EB', '#16A34A', '#9333EA', '#D97706'];
+    const COLORS = ['#EF4444', '#EC4899', '#6366F1', '#10B981', '#8B5CF6', '#F59E0B'];
     return Object.keys(counts).map((name, index) => ({
       name,
       count: counts[name].count,
@@ -198,160 +234,202 @@ export default function Dashboard({
   return (
     <div className="space-y-6">
       
-      {/* Title & Banner Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm shadow-red-900/5">
-        <div>
-          <div className="flex items-center space-x-2">
-            <span className="font-semibold text-xs tracking-wider text-red-600 bg-red-50 py-1 px-2.5 rounded-full uppercase">SaaS Portal</span>
-            <span className="text-gray-300">|</span>
-            <span className="text-xs text-gray-500 font-mono">Lokasi: {selectedCabang} • {selectedPerusahaan}</span>
-          </div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight mt-1">
-            Dashboard Utama
-          </h1>
-          <p className="text-gray-500 text-sm mt-0.5">
-            Selamat datang kembali. Anda masuk dengan otorisasi <strong className="text-red-600">{activeRole}</strong>.
-          </p>
-        </div>
+      {/* 1. Header & Live Clock Banner - Deep Premium Tech Style */}
+      <div 
+        id="dashboard-gold-header" 
+        className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 text-white p-6 md:p-8 rounded-3xl shadow-xl shadow-slate-950/20 border border-slate-850 select-none"
+      >
+        {/* Subtle decorative circles for grid layout feel */}
+        <div className="absolute right-0 top-0 w-80 h-80 bg-red-600/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-1/3 bottom-0 w-60 h-60 bg-indigo-650 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
+        
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center space-x-1 px-3 py-1 bg-gradient-to-r from-red-650 to-red-600 text-white rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm shadow-red-600/20">
+                <Sparkles className="h-3 w-3 animate-pulse" />
+                <span>Enterprise Portal</span>
+              </span>
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
+              <span className="text-xs text-slate-400 font-mono tracking-tight flex items-center gap-1.5 bg-slate-900 px-2.5 py-1 rounded-md border border-slate-800">
+                <Building2 className="h-3.5 w-3.5 text-slate-400" />
+                <span>{selectedCabang} • {selectedPerusahaan}</span>
+              </span>
+            </div>
 
-        {/* Action Quick Tools for Admins */}
-        {activeRole !== 'Sales' && (
-          <div className="flex items-center space-x-2 self-start md:self-center">
-            <button
-              id="dash-generate-invoices"
-              onClick={generateInvoices}
-              className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-semibold text-xs px-4 py-2.5 rounded-xl shadow-md shadow-red-600/10 transition cursor-pointer"
-            >
-              <Play className="h-3.5 w-3.5" />
-              <span>Simulasikan Tagihan Bulanan</span>
-            </button>
+            <h1 className="text-2xl md:text-3.5xl font-black text-white tracking-tight leading-none mt-1">
+              Dasbor Manajemen Utama
+            </h1>
+            <p className="text-slate-400 text-xs md:text-sm max-w-xl font-normal leading-relaxed">
+              Pantau matrik keaktifan pelanggan, status tagihan, serta evaluasi operasional keagenan. Otorisasi akun Anda: <strong className="text-red-500 font-bold">{activeRole}</strong>.
+            </p>
           </div>
-        )}
+
+          <div className="flex flex-col sm:items-end gap-3.5 shrink-0">
+            {/* Live Indonesian WIB Clock Wrapper */}
+            <div className="flex items-center space-x-2.5 bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-xl text-emerald-400 shadow-inner">
+              <Clock className="h-4 w-4 animate-spin-slow shrink-0 text-emerald-400" />
+              <div className="text-left sm:text-right">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest block font-mono">Waktu Sistem Terenkripsi</span>
+                <span className="font-mono text-xs font-black tracking-wide block">{timeStr || 'Memuat waktu...'}</span>
+              </div>
+            </div>
+
+            {/* Quick Simulate Button */}
+            {activeRole !== 'Sales' && (
+              <button
+                id="btn-simulate-invoices-dashboard"
+                onClick={generateInvoices}
+                className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 active:scale-95 text-white font-black text-xs px-5 py-3 rounded-xl shadow-md shadow-red-600/20 border border-red-500/20 transition-all cursor-pointer"
+              >
+                <Play className="h-3.5 w-3.5 fill-current" />
+                <span>Simulasikan Tagihan Bulanan</span>
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* KPI Bento Grid */}
+      {/* 2. KPI Metrics Grid - Elegantly styled as Premium Glass Bento Blocks */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* KPI 1: Total Pelanggan */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-5 group-hover:scale-110 duration-500">
-            <Users className="h-28 w-28 text-red-600" />
+        
+        {/* Card 1: Total Pelanggan */}
+        <div className="group relative bg-white p-5 rounded-2xl border border-slate-200/85 hover:border-red-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md overflow-hidden">
+          <div className="absolute right-0 bottom-0 translate-x-5 translate-y-5 opacity-5 group-hover:scale-125 group-hover:opacity-10 transition-all duration-500">
+            <Users className="h-28 w-28 text-red-650" />
           </div>
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Total Pelanggan</span>
-            <span className="text-3xl font-black text-gray-950 block tracking-tight">
-              {stats.total}
-            </span>
-            <span className="text-[10px] text-gray-500 font-medium block">
-              Filter Cabang & Company aktif
-            </span>
-          </div>
-          <div className="bg-red-50 p-3 rounded-2xl text-red-600 shrink-0">
-            <Users className="h-6 w-6" />
-          </div>
-        </div>
-
-        {/* KPI 2: Pelanggan Aktif */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-5 group-hover:scale-110 duration-500">
-            <UserCheck className="h-28 w-28 text-emerald-600" />
-          </div>
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Pelanggan Aktif</span>
-            <span className="text-3xl font-black text-emerald-600 block tracking-tight">
-              {stats.active}
-            </span>
-            <span className="text-[10px] text-emerald-600 font-semibold bg-emerald-50 py-0.5 px-1.5 rounded inline-block mt-1">
-              {stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% Tingkat Keaktifan
-            </span>
-          </div>
-          <div className="bg-emerald-50 p-3 rounded-2xl text-emerald-600 shrink-0">
-            <UserCheck className="h-6 w-6" />
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block font-mono">Total Pelanggan</span>
+              <span className="text-3.5xl font-black text-slate-900 block leading-none tracking-tight">
+                {stats.total}
+              </span>
+              <span className="text-[9.5px] text-slate-500 font-medium block pt-1.5">
+                Konfigurasi filter aktif
+              </span>
+            </div>
+            <div className="bg-red-50 border border-red-100 p-3 rounded-2xl text-red-650 shrink-0 group-hover:bg-red-500 group-hover:text-white transition duration-300 shadow-sm">
+              <Users className="h-5 w-5" />
+            </div>
           </div>
         </div>
 
-        {/* KPI 3: Tagihan Berjalan */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-5 group-hover:scale-110 duration-500">
-            <CreditCard className="h-28 w-28 text-amber-600" />
+        {/* Card 2: Pelanggan Aktif */}
+        <div className="group relative bg-white p-5 rounded-2xl border border-slate-200/85 hover:border-emerald-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md overflow-hidden">
+          <div className="absolute right-0 bottom-0 translate-x-5 translate-y-5 opacity-5 group-hover:scale-125 group-hover:opacity-10 transition-all duration-500">
+            <UserCheck className="h-28 w-28 text-emerald-500" />
           </div>
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Piutang Berjalan</span>
-            <span className="text-2xl font-black text-amber-600 block tracking-tight">
-              {rupiahFormat(stats.runningBill)}
-            </span>
-            <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 py-0.5 px-1.5 rounded inline-block mt-1">
-              Outstanding {filteredInvoices.filter(i => i.status !== 'Lunas').length} invoice
-            </span>
-          </div>
-          <div className="bg-amber-50 p-3 rounded-2xl text-amber-500 shrink-0">
-            <CreditCard className="h-6 w-6" />
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block font-mono">Pelanggan Aktif</span>
+              <span className="text-3.5xl font-black text-emerald-600 block leading-none tracking-tight">
+                {stats.active}
+              </span>
+              <span className="inline-flex items-center space-x-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-100 py-0.5 px-2 rounded-full mt-2">
+                <ArrowUpRight className="h-3 w-3 text-emerald-600" />
+                <span>{stats.total > 0 ? Math.round((stats.active / stats.total) * 100) : 0}% Rasio Aktif</span>
+              </span>
+            </div>
+            <div className="bg-emerald-50 border border-emerald-100 p-3 rounded-2xl text-emerald-600 shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition duration-300 shadow-sm">
+              <UserCheck className="h-5 w-5" />
+            </div>
           </div>
         </div>
 
-        {/* KPI 4: Total Komisi / Total Pendapatan Terbayar */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group overflow-hidden relative">
-          <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-5 group-hover:scale-110 duration-500">
-            {activeRole === 'Sales' ? <Award className="h-28 w-28 text-red-600" /> : <DollarSign className="h-28 w-28 text-red-600" />}
+        {/* Card 3: Piutang Berjalan */}
+        <div className="group relative bg-white p-5 rounded-2xl border border-slate-200/85 hover:border-amber-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md overflow-hidden">
+          <div className="absolute right-0 bottom-0 translate-x-5 translate-y-5 opacity-5 group-hover:scale-125 group-hover:opacity-10 transition-all duration-500">
+            <CreditCard className="h-28 w-28 text-amber-500" />
           </div>
-          <div className="space-y-1">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block">
-              {activeRole === 'Sales' ? 'Komisi Anda' : 'Total Pendapatan'}
-            </span>
-            <span className="text-2xl font-black text-red-700 block tracking-tight">
-              {rupiahFormat(activeRole === 'Sales' ? stats.totalSalesCommission : stats.totalCollected)}
-            </span>
-            <span className="text-[10px] text-red-700 font-semibold bg-red-50 py-0.5 px-1.5 rounded inline-block mt-1">
-              {activeRole === 'Sales' ? 'Total insentif dicairkan' : `Komisi dibayar: ${rupiahFormat(stats.totalSalesCommission)}`}
-            </span>
-          </div>
-          <div className="bg-red-50 p-3 rounded-2xl text-red-600 shrink-0">
-            {activeRole === 'Sales' ? <Award className="h-6 w-6" /> : <DollarSign className="h-6 w-6" />}
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block font-mono">Sisa Piutang</span>
+              <span className="text-2xl font-black text-amber-600 block leading-tight tracking-tight mt-1">
+                {rupiahFormat(stats.runningBill)}
+              </span>
+              <span className="inline-flex items-center space-x-1 text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-100 py-0.5 px-2 rounded-full mt-2">
+                <span>{filteredInvoices.filter(i => i.status !== 'Lunas').length} Invoice Menunggu</span>
+              </span>
+            </div>
+            <div className="bg-amber-50 border border-amber-100 p-3 rounded-2xl text-amber-600 shrink-0 group-hover:bg-amber-500 group-hover:text-white transition duration-300 shadow-sm">
+              <CreditCard className="h-5 w-5" />
+            </div>
           </div>
         </div>
+
+        {/* Card 4: Total Pendapatan / Komisi */}
+        <div className="group relative bg-white p-5 rounded-2xl border border-slate-200/85 hover:border-indigo-300 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md overflow-hidden">
+          <div className="absolute right-0 bottom-0 translate-x-5 translate-y-5 opacity-5 group-hover:scale-125 group-hover:opacity-10 transition-all duration-500">
+            <DollarSign className="h-28 w-28 text-indigo-505" />
+          </div>
+          <div className="flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest block font-mono">
+                {activeRole === 'Sales' ? 'Total Komisi' : 'Pendapatan Bersih'}
+              </span>
+              <span className="text-2xl font-black text-indigo-600 block leading-tight tracking-tight mt-1">
+                {rupiahFormat(activeRole === 'Sales' ? stats.totalSalesCommission : stats.totalCollected)}
+              </span>
+              <span className="inline-flex items-center space-x-1 text-[10px] text-indigo-700 font-bold bg-indigo-50 border border-indigo-150 py-0.5 px-2 rounded-full mt-2">
+                <span>{activeRole === 'Sales' ? 'Insentif Cair' : `Siklus Tagihan Berlangsung`}</span>
+              </span>
+            </div>
+            <div className="bg-indigo-50 border border-indigo-100 p-3 rounded-2xl text-indigo-600 shrink-0 group-hover:bg-indigo-600 group-hover:text-white transition duration-300 shadow-sm">
+              {activeRole === 'Sales' ? <Award className="h-5 w-5" /> : <DollarSign className="h-5 w-5" />}
+            </div>
+          </div>
+        </div>
+
       </div>
 
-      {/* Secondary KPI Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-red-50 border border-red-100 rounded-xl p-4 flex items-center space-x-3 text-red-800">
-          <UserPlus className="h-5 w-5 text-red-600 shrink-0" />
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-red-900">Pelanggan Baru Bulan Ini</h4>
-            <p className="text-sm font-medium mt-0.5">Sistem mencatat <strong>{stats.newThisMonth} pelanggan baru</strong> terdaftar pada siklus ini.</p>
+      {/* 3. Secondary KPI/Notices Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 select-none">
+        
+        <div className="bg-gradient-to-r from-red-50 to-white border border-red-100/70 rounded-2xl p-4 flex items-center space-x-4 hover:shadow-sm transition">
+          <div className="h-10 w-10 rounded-xl bg-red-100 flex items-center justify-center text-red-650 shrink-0">
+            <UserPlus className="h-5 w-5" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-red-900 font-mono">Pelanggan Baru</h4>
+            <p className="text-xs text-slate-600 font-medium">Sistem mencatat <strong className="text-slate-900 font-bold">{stats.newThisMonth} pelanggan baru</strong> pada bulan ini.</p>
           </div>
         </div>
 
-        <div className="bg-orange-50 border border-orange-100 rounded-xl p-4 flex items-center space-x-3 text-orange-850">
-          <AlertTriangle className="h-5 w-5 text-orange-600 shrink-0" />
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-orange-950">Pelanggan Menunggak (Terlambat)</h4>
-            <p className="text-sm font-medium mt-0.5">Ada <strong>{filteredCustomers.filter(c => c.paymentStatus === 'Terlambat').length} pelanggan terlambat</strong> membutuhkan follow up.</p>
+        <div className="bg-gradient-to-r from-orange-50 to-white border border-orange-100/70 rounded-2xl p-4 flex items-center space-x-4 hover:shadow-sm transition">
+          <div className="h-10 w-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-655 text-orange-600 shrink-0">
+            <ShieldAlert className="h-5 w-5" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-orange-950 font-mono">Arsip Menunggak</h4>
+            <p className="text-xs text-slate-600 font-medium">Ada <strong className="text-slate-900 font-bold">{filteredCustomers.filter(c => c.paymentStatus === 'Terlambat').length} kontrak terlambat</strong> butuh follow-up.</p>
           </div>
         </div>
 
-        <div className="bg-gray-55 border border-gray-200 rounded-xl p-4 flex items-center space-x-3 text-gray-800 bg-white">
-          <TrendingUp className="h-5 w-5 text-gray-500 shrink-0" />
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-gray-900">Rasio Kolektibilitas Tagihan</h4>
-            <p className="text-sm font-medium mt-0.5">Rasio efisiensi penagihan berada pada level <strong>
-              {filteredInvoices.length > 0 ? Math.round((filteredInvoices.filter(i => i.status === 'Lunas').length / filteredInvoices.length) * 100) : 0}%
-            </strong> bulan ini.</p>
+        <div className="bg-gradient-to-r from-emerald-50 to-white border border-emerald-100/70 rounded-2xl p-4 flex items-center space-x-4 hover:shadow-sm transition">
+          <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div className="space-y-0.5">
+            <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-900 font-mono">Rasio Efisiensi</h4>
+            <p className="text-xs text-slate-600 font-medium">Kolektibilitas tagihan berhasil mencapai: <strong className="text-slate-900 font-bold">{filteredInvoices.length > 0 ? Math.round((filteredInvoices.filter(i => i.status === 'Lunas').length / filteredInvoices.length) * 100) : 0}%</strong></p>
           </div>
         </div>
+
       </div>
 
-      {/* Charts Section */}
+      {/* 4. Charts Bento Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Growth Chart Area */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white p-5 rounded-3xl border border-slate-205 border-slate-200/85 shadow-sm lg:col-span-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 select-none">
             <div>
-              <h3 className="font-extrabold text-base text-gray-900">Pertumbuhan Tren Pelanggan & Pendapatan</h3>
-              <p className="text-xs text-gray-500">Histori kumulatif pendaftaran dan penagihan lunas jangka waktu terpilih.</p>
+              <h3 className="font-black text-sm text-slate-900 uppercase tracking-tight">Tren Registrasi & Keuangan</h3>
+              <p className="text-[11px] text-slate-500">Histori pertumbuhan jumlah pelanggan kumulatif & pendapatan terbayar.</p>
             </div>
-            <div className="bg-gray-100 p-1 rounded-lg flex space-x-1 text-[10px] font-bold">
-              <span className="bg-white px-2.5 py-1 rounded text-gray-900 shadow-sm cursor-pointer">Realisasi</span>
-              <span className="text-gray-500 px-2.5 py-1 rounded cursor-not-allowed">Proyeksi</span>
+            <div className="bg-slate-50 border border-slate-200/80 p-0.5 rounded-xl flex text-[10px] font-black uppercase">
+              <span className="bg-white text-slate-900 px-3 py-1.5 rounded-lg shadow-sm border border-slate-200">Realisasi</span>
+              <span className="text-slate-400 px-3 py-1.5 rounded-lg cursor-not-allowed">Proyeksi</span>
             </div>
           </div>
           
@@ -360,51 +438,54 @@ export default function Dashboard({
               <AreaChart data={adjustedGrowthData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCust" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#DC2626" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#DC2626" stopOpacity={0.01}/>
+                    <stop offset="5%" stopColor="#EF4444" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#EF4444" stopOpacity={0.01}/>
                   </linearGradient>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.25}/>
-                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0.01}/>
+                    <stop offset="5%" stopColor="#6366F1" stopOpacity={0.25}/>
+                    <stop offset="95%" stopColor="#6366F1" stopOpacity={0.01}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                <XAxis dataKey="name" stroke="#9CA3AF" fontSize={11} tickLine={false} />
-                <YAxis yAxisId="left" stroke="#9CA3AF" fontSize={11} tickLine={false} />
-                <YAxis yAxisId="right" orientation="right" stroke="#9CA3AF" fontSize={11} tickLine={false} tickFormatter={(v) => `Rp${v/1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="name" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} className="font-mono" />
+                <YAxis yAxisId="left" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis yAxisId="right" orientation="right" stroke="#94A3B8" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `Rp${v/1000}k`} />
                 <Tooltip 
                   formatter={(value, name) => {
-                    if (name === 'Pendapatan') return [rupiahFormat(Number(value)), 'Pendapatan (Lunas)'];
+                    if (name === 'Pendapatan') return [rupiahFormat(Number(value)), 'Pendapatan Terbayar'];
                     return [value, 'Total Pelanggan'];
                   }}
-                  contentStyle={{ backgroundColor: '#111827', borderRadius: '12px', color: '#FFF', fontSize: '12px', border: 'none' }}
+                  contentStyle={{ backgroundColor: '#0F172A', borderRadius: '14px', color: '#FFF', fontSize: '11px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
                 />
-                <Area yAxisId="left" type="monotone" dataKey="Pelanggan" stroke="#DC2626" strokeWidth={2.5} fillOpacity={1} fill="url(#colorCust)" />
-                <Area yAxisId="right" type="monotone" dataKey="Pendapatan" stroke="#2563EB" strokeWidth={2.5} fillOpacity={1} fill="url(#colorRev)" />
-                <Legend iconType="circle" />
+                <Area yAxisId="left" type="monotone" dataKey="Pelanggan" stroke="#EF4444" strokeWidth={3} fillOpacity={1} fill="url(#colorCust)" />
+                <Area yAxisId="right" type="monotone" dataKey="Pendapatan" stroke="#6366F1" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
+                <Legend iconType="circle" iconSize={8} className="text-xs font-semibold" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* Package Stat Box */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/85 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="font-extrabold text-base text-gray-900">Statistik Kontribusi Paket</h3>
-            <p className="text-xs text-gray-500 mb-4">Breakdown pelanggan berdasarkan paket langganan yang aktif.</p>
+            <div className="flex items-center space-x-2 mb-1.5 select-none">
+              <Layers className="h-4 w-4 text-slate-505 text-slate-500" />
+              <h3 className="font-black text-sm text-slate-900 uppercase tracking-tight">Dominasi Paket Layanan</h3>
+            </div>
+            <p className="text-[11px] text-slate-500 mb-4">Breakdown keanggotaan pelanggan berdasarkan paket langganan saat ini.</p>
             
             {packageStats.length === 0 ? (
-              <div className="py-12 text-center text-gray-400 text-xs">Tidak ada data paket.</div>
+              <div className="py-12 text-center text-slate-400 text-xs">Belum ada statistik paket layan terpilih.</div>
             ) : (
               <div className="h-44 flex items-center justify-center relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={packageStats}
-                      cx="55%"
+                      cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
+                      innerRadius={55}
+                      outerRadius={75}
                       paddingAngle={3}
                       dataKey="count"
                     >
@@ -412,29 +493,29 @@ export default function Dashboard({
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v) => [`${v} Pelanggan`, 'Jumlah']} />
+                    <Tooltip formatter={(v) => [`${v} Pelanggan`, 'Kuantitas']} />
                   </PieChart>
                 </ResponsiveContainer>
                 {/* Visual Label inside middle of donut */}
-                <div className="absolute top-1/2 left-[55%] -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                  <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider">Aktif</span>
-                  <span className="text-xl font-black text-gray-950 block leading-none">{stats.active}</span>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none select-none">
+                  <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest block font-mono">Aktif</span>
+                  <span className="text-2.5xl font-black text-slate-900 block leading-tight font-mono">{stats.active}</span>
                 </div>
               </div>
             )}
           </div>
 
           {/* Table Breakdown of Packages for Premium look */}
-          <div className="space-y-2 mt-4 overflow-y-auto max-h-32 pr-1">
+          <div className="space-y-2 mt-4 overflow-y-auto max-h-32 pr-1 divide-y divide-slate-100">
             {packageStats.map((pkg) => (
-              <div key={pkg.name} className="flex items-center justify-between text-xs">
-                <div className="flex items-center space-x-2">
+              <div key={pkg.name} className="flex items-center justify-between text-xs pt-2">
+                <div className="flex items-center space-x-2 truncate">
                   <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: pkg.color }} />
-                  <span className="font-semibold text-gray-700 truncate max-w-40">{pkg.name}</span>
+                  <span className="font-extrabold text-slate-700 truncate max-w-[120px]">{pkg.name}</span>
                 </div>
                 <div className="text-right">
-                  <span className="font-bold text-gray-900 block">{pkg.count} Pelanggan</span>
-                  <span className="text-[10px] text-gray-400 block">{rupiahFormat(pkg.revenue)}</span>
+                  <span className="font-black text-slate-900 block">{pkg.count} Pelanggan</span>
+                  <span className="text-[10px] text-slate-400 block font-mono">{rupiahFormat(pkg.revenue)}</span>
                 </div>
               </div>
             ))}
@@ -442,26 +523,26 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Row 3 - Revenue Billing charts & Sales performance */}
+      {/* 5. Invoicing Performance (BarChart) & Sales agent targets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Billing metrics details */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-between">
+        {/* Invoice Performance Area */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-205 border-slate-200/85 shadow-sm flex flex-col justify-between">
           <div>
-            <h3 className="font-extrabold text-base text-gray-900">Performa Invoice</h3>
-            <p className="text-xs text-gray-500 mb-4">Nominal tagihan di-kategorisasikan dalam ribu rupiah (k).</p>
+            <h3 className="font-black text-sm text-slate-900 uppercase tracking-tight">Kategori Invoice Jaringan</h3>
+            <p className="text-[11px] text-slate-500 mb-4 font-normal">Representasi nominal tagihan diposisikan dalam ribuan rupiah (k).</p>
             
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={invoiceStatusData} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#F3F4F6" />
-                  <XAxis dataKey="name" fontSize={11} stroke="#9CA3AF" tickLine={false} />
-                  <YAxis fontSize={11} stroke="#9CA3AF" tickLine={false} />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EDF2F7" />
+                  <XAxis dataKey="name" fontSize={10} stroke="#94A3B8" tickLine={false} axisLine={false} />
+                  <YAxis fontSize={10} stroke="#94A3B8" tickLine={false} axisLine={false} />
                   <Tooltip 
                     formatter={(v, name) => [name === 'Nominal' ? `${v}k` : v, name]}
-                    contentStyle={{ backgroundColor: '#111827', borderRadius: '12px', color: '#FFF' }}
+                    contentStyle={{ backgroundColor: '#0F172A', borderRadius: '12px', color: '#FFF' }}
                   />
-                  <Bar dataKey="Nominal" fill="#DC2626" radius={[4, 4, 0, 0]}>
+                  <Bar dataKey="Nominal" fill="#EF4444" radius={[6, 6, 0, 0]}>
                     {invoiceStatusData.map((entry, index) => {
                       const colors = ['#10B981', '#F59E0B', '#EF4444'];
                       return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
@@ -472,57 +553,56 @@ export default function Dashboard({
             </div>
           </div>
           
-          <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 mt-4">
-            <div className="flex items-center justify-between text-xs font-semibold text-gray-700">
-              <span>Collection Target:</span>
-              <span className="font-bold text-gray-900">{rupiahFormat(stats.runningBill + stats.totalCollected)}</span>
+          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/60 mt-4 select-none">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+              <span>Target Collection Bulan Ini:</span>
+              <span className="font-black text-slate-900 font-mono">{rupiahFormat(stats.runningBill + stats.totalCollected)}</span>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+            <div className="w-full bg-slate-200 rounded-full h-2 mt-2">
               <div 
-                className="bg-emerald-500 h-1.5 rounded-full" 
+                className="bg-emerald-500 h-2 rounded-full transition-all duration-500" 
                 style={{ width: `${stats.runningBill + stats.totalCollected > 0 ? (stats.totalCollected / (stats.runningBill + stats.totalCollected)) * 100 : 0}%` }}
               />
             </div>
           </div>
         </div>
 
-        {/* Sales Representatives Target Board */}
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm lg:col-span-2 flex flex-col justify-between">
+        {/* Sales Representatives Board */}
+        <div className="bg-white p-5 rounded-3xl border border-slate-200/85 shadow-sm lg:col-span-2 flex flex-col justify-between">
           <div>
-            <h3 className="font-extrabold text-base text-gray-900">Target & Kinerja Sales HP Berlangganan</h3>
-            <p className="text-xs text-gray-500 mb-4">Kinerja sales reps, jumlah pelanggan baru yang dibuat, komisi akumulatif dan status target bulanan.</p>
+            <h3 className="font-black text-sm text-slate-900 uppercase tracking-tight">Kinerja & Pencapaian Agen Sales</h3>
+            <p className="text-[11px] text-slate-500 mb-4">Total pencapaian omset dibanding target bulanan, komisi, dan jumlah pendaftaran kontrak.</p>
 
-            <div className="space-y-3.5 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
               {filteredSales.map((rep) => {
-                // Calculate dynamic performance ratio based on registered active payments or list targets
-                const currentSalesRevenue = rep.totalCustomers * 250000; // Average price package Rp250k
+                const currentSalesRevenue = rep.totalCustomers * 250000; // Expected package value Rp250k
                 const targetRatio = Math.min(100, Math.round((currentSalesRevenue / rep.targetSales) * 100));
 
                 return (
-                  <div key={rep.id} className="border border-gray-150 rounded-xl p-3.5 hover:border-red-200 transition duration-150">
+                  <div key={rep.id} className="border border-slate-150 border-slate-200/80 rounded-2xl p-3.5 hover:border-red-200/80 transition duration-150">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 text-xs">
                       <div>
-                        <h4 className="font-bold text-gray-900 text-sm flex items-center space-x-1.5">
+                        <h4 className="font-black text-slate-900 text-sm flex items-center space-x-1.5 select-none">
                           <span>{rep.name}</span>
-                          <span className="text-[10px] font-mono bg-red-50 text-red-700 border border-red-100 py-0.5 px-2 rounded-full font-bold">
+                          <span className="text-[9px] font-bold font-mono bg-red-50 text-red-650 border border-red-100/70 py-0.5 px-2 rounded-full">
                             {rep.cabang}
                           </span>
                         </h4>
-                        <span className="text-gray-400 text-[10px] font-mono block mt-0.5">{rep.email} • {rep.phone}</span>
+                        <span className="text-slate-400 text-[10px] font-mono block mt-0.5">{rep.email} • {rep.phone}</span>
                       </div>
                       <div className="text-right">
-                        <span className="block font-bold text-gray-900">Komisi: {rupiahFormat(rep.totalCommissionEarned)}</span>
-                        <span className="block text-[10px] font-semibold text-emerald-600">Pelanggan: {rep.totalCustomers} orang</span>
+                        <span className="block font-black text-slate-900 font-mono">Komisi: {rupiahFormat(rep.totalCommissionEarned)}</span>
+                        <span className="block text-[10px] font-bold text-emerald-600">Pelanggan: {rep.totalCustomers} orang</span>
                       </div>
                     </div>
                     
-                    {/* Linear Target Bar */}
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-[10px] font-bold text-gray-500">
+                    {/* Progress Bar of Target */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px] font-bold text-slate-500 select-none">
                         <span>Pencapaian: {rupiahFormat(currentSalesRevenue)} / Target {rupiahFormat(rep.targetSales)}</span>
-                        <span className="text-red-600 font-mono">{targetRatio}%</span>
+                        <span className="text-red-600 font-mono font-black">{targetRatio}%</span>
                       </div>
-                      <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full transition-all duration-500 ${
                             targetRatio >= 100 ? 'bg-emerald-500' : targetRatio >= 50 ? 'bg-amber-500' : 'bg-red-500'
@@ -535,15 +615,15 @@ export default function Dashboard({
                 );
               })}
               {filteredSales.length === 0 && (
-                <div className="py-12 text-center text-gray-400 text-xs">Tidak ada perwakilan sales terdaftar pada cabang ini.</div>
+                <div colSpan={2} className="py-12 text-center text-slate-400 text-xs">Tidak ada perwakilan sales terdaftar pada segmentasi filter saat ini.</div>
               )}
             </div>
           </div>
 
-          <div className="bg-red-50 p-3 rounded-lg border border-red-100 flex items-center justify-between text-xs text-red-900 font-medium mt-4">
-            <span>Formula Komisi:</span>
-            <span className="text-[10px] font-semibold uppercase bg-white border border-red-200 py-1 px-2.5 rounded text-red-700 font-mono">
-              Komisi = Harga Paket × Komisi % (Saat Pembayaran Sukses)
+          <div className="bg-red-50 border border-red-100/70 p-3 rounded-xl flex items-center justify-between text-xs text-red-900 font-extrabold mt-4 select-none">
+            <span>Sistem Komisi Keagenan:</span>
+            <span className="text-[9px] font-black uppercase bg-white border border-red-200/80 py-1 px-2.5 rounded-lg text-red-700 font-mono">
+              Komisi = Harga Paket × Komisi % (Pembayaran Terverifikasi)
             </span>
           </div>
         </div>

@@ -78,6 +78,7 @@ export default function Sidebar({
     { id: 'sales', label: 'Sales & Komisi', icon: DollarSign, roles: ['Super Admin', 'Sales'] },
     { id: 'premium', label: 'Premium & GPS', icon: QrCode, roles: ['Super Admin', 'Admin', 'Sales'] },
     { id: 'reports', label: 'Laporan & Ekspor', icon: BarChart3, roles: ['Super Admin', 'Admin'] },
+    { id: 'superadmin', label: 'Konsol Hak Akses', icon: ShieldCheck, roles: ['Super Admin'] },
   ];
 
   const filteredNav = navItems.filter(item => item.roles.includes(activeRole));

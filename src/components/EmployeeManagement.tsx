@@ -100,6 +100,37 @@ export default function EmployeeManagement({
   const [singlePrintEmp, setSinglePrintEmp] = useState<Employee | null>(null);
   const [printLayout, setPrintLayout] = useState<'pvc' | 'a4'>('pvc');
 
+  // ID Card Digital Modal Control States
+  const [showDigitalIdModal, setShowDigitalIdModal] = useState(false);
+  const [digitalIdEmployee, setDigitalIdEmployee] = useState<Employee | null>(null);
+  const [digitalCardFlipped, setDigitalCardFlipped] = useState(false);
+  const [digitalCardTemplate, setDigitalCardTemplate] = useState<'standard' | 'sales' | 'manager'>('standard');
+  const [qrSecurityToken, setQrSecurityToken] = useState('');
+
+  // Real-time dynamic security token update for the dynamic QR Code
+  React.useEffect(() => {
+    if (showDigitalIdModal && digitalIdEmployee) {
+      const updateToken = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        
+        // Dynamic dynamic qr code data indicating validation and secure timestamp
+        const timeStr = `${year}-${month}-${date}_${hours}:${minutes}:${seconds}`;
+        const token = `FGI_SECURE_AUTH|NIP:${digitalIdEmployee.employeeId}|VERIFIER:${digitalIdEmployee.name.replaceAll(' ', '_')}|TIME:${timeStr}|STATUS:ACTIVE`;
+        setQrSecurityToken(token);
+      };
+      
+      updateToken();
+      const interval = setInterval(updateToken, 3000); // refresh every 3 seconds for active security simulation!
+      return () => clearInterval(interval);
+    }
+  }, [showDigitalIdModal, digitalIdEmployee]);
+
   // ID Card Template Selector
   const [cardTemplate, setCardTemplate] = useState<'standard' | 'sales' | 'manager'>('standard');
 
@@ -806,19 +837,36 @@ export default function EmployeeManagement({
 
                   {/* Actions Area */}
                   <div className="mt-4 pt-3 border-t flex items-center justify-between gap-2 text-xs">
-                    <button
-                      id={`emp-card-preview-id-${emp.id}`}
-                      onClick={() => {
-                        setSinglePrintEmp(emp);
-                        setCardTemplate(emp.position === 'Sales Executive' ? 'sales' : emp.position.toLowerCase().includes('manager') || emp.position === 'Direktur' ? 'manager' : 'standard');
-                        setActiveSubTab('idcard');
-                      }}
-                      className="text-slate-600 hover:text-red-700 font-bold flex items-center space-x-1"
-                      title="Lihat Desain Kartu PVC"
-                    >
-                      <Eye className="h-3.5 w-3.5" />
-                      <span>Desain</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        id={`emp-card-preview-id-${emp.id}`}
+                        onClick={() => {
+                          setSinglePrintEmp(emp);
+                          setCardTemplate(emp.position === 'Sales Executive' ? 'sales' : emp.position.toLowerCase().includes('manager') || emp.position === 'Direktur' ? 'manager' : 'standard');
+                          setActiveSubTab('idcard');
+                        }}
+                        className="text-slate-600 hover:text-red-700 font-bold flex items-center space-x-1"
+                        title="Lihat Desain Kartu PVC"
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>Desain</span>
+                      </button>
+
+                      <button
+                        id={`emp-card-digital-id-${emp.id}`}
+                        onClick={() => {
+                          setDigitalIdEmployee(emp);
+                          setDigitalCardTemplate(emp.position === 'Sales Executive' ? 'sales' : emp.position.toLowerCase().includes('manager') || emp.position === 'Direktur' ? 'manager' : 'standard');
+                          setDigitalCardFlipped(false);
+                          setShowDigitalIdModal(true);
+                        }}
+                        className="bg-red-50 hover:bg-red-100 text-red-600 font-black flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-red-100 hover:border-red-205 transition-all text-[10px] cursor-pointer"
+                        title="Lihat ID Card Digital"
+                      >
+                        <QrCode className="h-3.5 w-3.5" />
+                        <span>ID Digital</span>
+                      </button>
+                    </div>
 
                     <div className="flex items-center space-x-2">
                       <button
@@ -971,6 +1019,20 @@ export default function EmployeeManagement({
                   >
                     <FileText className="h-4 w-4 text-slate-500" />
                     <span>Multi Cetak A4 / Pembuat PDF</span>
+                  </button>
+
+                  <button
+                    id="btn-designer-view-digital-id"
+                    onClick={() => {
+                      setDigitalIdEmployee(singlePrintEmp);
+                      setDigitalCardTemplate(cardTemplate);
+                      setDigitalCardFlipped(false);
+                      setShowDigitalIdModal(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-red-600 to-red-750 hover:from-red-500 hover:to-red-700 text-white font-black py-2.5 px-4 rounded-lg flex items-center justify-center space-x-1.5 transition cursor-pointer mt-2.5 shadow-md shadow-red-600/10"
+                  >
+                    <QrCode className="h-4 w-4" />
+                    <span>Buka ID Card Digital</span>
                   </button>
                 </div>
               )}
@@ -1858,6 +1920,410 @@ export default function EmployeeManagement({
           {/* Bottom helper */}
           <div className="bg-slate-950 px-6 py-3 border-t border-slate-900 text-center text-[10px] text-slate-400 font-mono uppercase select-none print:hidden">
             Tip: Untuk hasil terbaik pada kertas PVC Card, atur "Margins: None" dan nyalakan opsi "Background Graphics" pada setelan halaman cetak browser Anda.
+          </div>
+
+        </div>
+      )}
+
+      {/* 8. STYLE INJECTIONS FOR INTERACTIVE 3D EFFECTS & PORTRAIT PDF PRINTING OUTPUT */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        .perspective-1000 {
+          perspective: 1000px;
+        }
+        .transform-style-3d {
+          transform-style: preserve-3d;
+        }
+        .backface-hidden {
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+          transform: rotateY(180deg);
+        }
+        @media print {
+          /* Hide everything except the printable container block */
+          body > *, #root, header, main, footer, .print\\:hidden, #employee-crud-modal, #digital-id-card-modal, #print-layout-modal {
+            display: none !important;
+            visibility: hidden !important;
+          }
+          /* Override browser layout for high resolution portrait PDF prints */
+          @page {
+            size: portrait;
+            margin: 0;
+          }
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          .digital-id-print-area {
+            display: flex !important;
+            visibility: visible !important;
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            gap: 40px !important;
+          }
+          .digital-id-print-area * {
+            visibility: visible !important;
+          }
+        }
+      `}} />
+
+      {/* 9. MODAL: DYNAMIC / INTERACTIVE DIGITAL ID CARD & PDF EXPORTER */}
+      {showDigitalIdModal && digitalIdEmployee && (
+        <div id="digital-id-card-modal" className="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto select-none print:hidden animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 md:p-8 shadow-2xl relative flex flex-col md:flex-row gap-6 md:gap-8 items-center md:items-stretch">
+            
+            {/* Modal Exit */}
+            <button
+              id="btn-digital-id-close"
+              onClick={() => setShowDigitalIdModal(false)}
+              className="absolute top-4 right-4 bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-full transition-all cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            {/* Left Column: Interactive 3D Card Display */}
+            <div className="flex-1 flex flex-col items-center justify-center space-y-5 py-4">
+              
+              <div className="text-center">
+                <span className="text-[10px] text-red-550 text-red-500 uppercase font-black tracking-widest font-mono">ID Card Digital Indonesia</span>
+                <h4 className="text-white text-base font-black mt-1">Interaktif 3D Card View</h4>
+                <p className="text-slate-400 text-xs mt-0.5">Ketuk/klik kartu atau gunakan tombol di bawah untuk membalik kartu</p>
+              </div>
+
+              {/* 3D Flip Container */}
+              <div 
+                className="perspective-1000 w-[241.2px] h-[352.8px] cursor-pointer group"
+                onClick={() => setDigitalCardFlipped(!digitalCardFlipped)}
+              >
+                <div className={`relative w-full h-full duration-700 transform-style-3d transition-transform ${digitalCardFlipped ? 'rotate-y-180' : ''}`}>
+                  
+                  {/* CARD FRONT SIDE */}
+                  <div className="absolute inset-0 w-full h-full backface-hidden rounded-[12px] overflow-hidden bg-white border border-slate-300 shadow-2xl flex flex-col justify-between">
+                    
+                    {/* Header custom styles */}
+                    {digitalCardTemplate === 'standard' && (
+                      <div className="bg-gradient-to-r from-red-650 to-red-800 bg-red-600 p-2.5 text-center text-white">
+                        <h4 className="text-[9px] font-black tracking-tight leading-tight uppercase font-sans">PT. FORESYNDO GLOBAL INDONESIA</h4>
+                        <span className="text-[7px] text-red-100 font-mono tracking-widest block uppercase mt-0.5">SaaS & HRIS Pro-Software</span>
+                      </div>
+                    )}
+                    {digitalCardTemplate === 'sales' && (
+                      <div className="bg-slate-100 border-b border-indigo-200 p-2 text-center text-slate-800 flex justify-between items-center px-4">
+                        <span className="text-[8px] font-extrabold text-blue-900 tracking-tight leading-tight uppercase text-left">PT. FORESYNDO<br/>GLOBAL INDONESIA</span>
+                        <span className="text-[7.5px] uppercase bg-gradient-to-r from-indigo-500 to-indigo-800 text-white font-black px-1.5 py-0.5 rounded-full font-mono scale-95 origin-right">
+                          SALES
+                        </span>
+                      </div>
+                    )}
+                    {digitalCardTemplate === 'manager' && (
+                      <div className="bg-slate-950 p-2.5 text-center border-b-2 border-yellow-500 text-white">
+                        <h4 className="text-[9px] font-black tracking-tight leading-tight uppercase font-sans text-yellow-500">PT. FORESYNDO GLOBAL INDONESIA</h4>
+                        <span className="text-[7px] text-yellow-105 text-yellow-100 font-serif tracking-widest block uppercase mt-0.5">EXECUTIVE SUITE LEAGUE</span>
+                      </div>
+                    )}
+
+                    {/* Content area */}
+                    <div className="p-3 text-center flex-1 flex flex-col justify-center items-center space-y-1.5">
+                      
+                      <div className="relative">
+                        <div className={`p-0.5 rounded-full overflow-hidden ${digitalCardTemplate === 'manager' ? 'bg-yellow-500' : digitalCardTemplate === 'sales' ? 'bg-indigo-500' : 'bg-red-600'}`}>
+                          <img src={digitalIdEmployee.photo} alt="Digital Front avatar" className="h-16 w-16 rounded-full object-cover border-2 border-white" />
+                        </div>
+                        <span className="absolute bottom-0.5 right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+                      </div>
+
+                      <div>
+                        <h3 className="text-xs font-black text-slate-900 leading-normal uppercase">{digitalIdEmployee.name}</h3>
+                        <span className={`text-[8px] font-bold px-2.5 py-0.5 rounded-full inline-block mt-0.5 ${
+                          digitalCardTemplate === 'manager' ? 'bg-yellow-500/10 text-yellow-800 border border-yellow-250/50' : digitalCardTemplate === 'sales' ? 'bg-indigo-50 text-indigo-800 border' : 'bg-red-50 text-red-700 border border-red-200'
+                        }`}>
+                          {digitalIdEmployee.position}
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-slate-50 border p-1 rounded text-[8px] space-y-0.5 leading-normal text-slate-800">
+                        <div className="flex justify-between px-1">
+                          <span className="text-slate-400 font-mono">REG ID (NIP):</span>
+                          <span className="font-bold text-slate-900 font-mono">{digitalIdEmployee.employeeId}</span>
+                        </div>
+                        <div className="flex justify-between px-1">
+                          <span className="text-slate-400 font-mono">CABANG (REGION):</span>
+                          <span className="font-semibold text-slate-900">{digitalIdEmployee.branch}</span>
+                        </div>
+                        <div className="flex justify-between px-1">
+                          <span className="text-slate-400 font-mono">STATUS KERJA:</span>
+                          <span className="font-extrabold text-emerald-600 font-sans">AKTIF</span>
+                        </div>
+                      </div>
+
+                      {/* Small dynamic validation QR */}
+                      <div className="flex items-center justify-center p-1 border rounded bg-white mt-1">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrSecurityToken)}`} 
+                          alt="Dynamic SECURE Token QR" 
+                          className="h-10 w-10 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+
+                    </div>
+
+                    {/* Card front bottom footer */}
+                    <div className={`p-1.5 text-center text-[7px] border-t ${
+                      digitalCardTemplate === 'manager' ? 'bg-slate-950 border-slate-900 text-yellow-100/60' : 'bg-slate-50 border-slate-150 text-slate-500'
+                    }`}>
+                      <span>Official Web: www.foresyndo.co.id</span>
+                    </div>
+
+                  </div>
+
+                  {/* CARD BACK SIDE */}
+                  <div style={cardBackStyle} className="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-[12px] overflow-hidden bg-slate-900 border border-slate-950 shadow-2xl flex flex-col justify-between text-white text-center">
+                    
+                    <div className={`h-1.5 w-full ${digitalCardTemplate === 'manager' ? 'bg-yellow-500' : digitalCardTemplate === 'sales' ? 'bg-blue-500' : 'bg-red-600'}`} />
+
+                    <div className="p-4 text-center flex-1 flex flex-col justify-center items-center space-y-3.5 text-white">
+                      <div>
+                        <p className={`text-[8px] font-bold uppercase tracking-widest ${digitalCardTemplate === 'manager' ? 'text-yellow-500' : 'text-slate-400'}`}>KARTU AKSES PREFRAL</p>
+                        <span className="text-[6px] text-slate-505 text-slate-400 uppercase block font-mono mt-0.5">HRIS SECURITY VERIFIED</span>
+                      </div>
+
+                      {/* Rotating high-res QR Container */}
+                      <div className="bg-white p-2 text-slate-900 rounded-lg border border-slate-700 shadow-md">
+                        <img 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrSecurityToken)}`} 
+                          alt="Back validation QR" 
+                          className="h-18 w-18 shrink-0"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+
+                      <div className="text-[8px] font-mono leading-relaxed space-y-0.5 border-t border-b border-slate-800 py-1.5 w-full text-slate-300">
+                        <p>MASA BERLAKU: {digitalIdEmployee.masaBerlaku || '12/2029'}</p>
+                        <p className="text-emerald-400 font-extrabold flex items-center justify-center gap-1">
+                          <CheckCircle className="h-2 w-2 text-emerald-400" /> STATUS AKTIF
+                        </p>
+                      </div>
+
+                      <div className="w-full text-slate-300">
+                        {generateBarcodeSVG(digitalIdEmployee.barcode)}
+                        <span className="text-[6px] text-slate-500 block font-mono mt-1">SERIAL NUMBER: {digitalIdEmployee.cardNumber}</span>
+                      </div>
+
+                    </div>
+
+                    <div className="p-2 bg-slate-950 border-t border-slate-800 text-center text-[5.5px] text-slate-500 leading-snug uppercase">
+                      Sah milik PT. Foresyndo Global Indonesia.
+                    </div>
+
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Balik Button */}
+              <button
+                id="btn-digital-id-flip-card"
+                onClick={() => setDigitalCardFlipped(!digitalCardFlipped)}
+                className="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white text-xs font-black py-2 px-5 rounded-xl flex items-center space-x-1.5 transition-all shadow-md active:scale-95 cursor-pointer"
+              >
+                <RefreshCw className="h-3.5 w-3.5 rounded animate-spin-slow text-red-500" />
+                <span>Balik Sisi Kartu</span>
+              </button>
+
+            </div>
+
+            {/* Right Column: Metas, QR Token Status, and PDF print actions */}
+            <div className="flex-1 border-t md:border-t-0 md:border-l border-slate-800 md:pl-8 flex flex-col justify-between space-y-6 py-2">
+              
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[9px] rounded font-bold border border-emerald-550/30">SERVER OK</span>
+                    <span className="text-[10px] text-slate-400 font-mono uppercase tracking-wider font-bold">DIGITAL BADGE</span>
+                  </div>
+                  <h3 className="text-white text-lg font-black uppercase mt-1">Katalog ID Digital Pegawai</h3>
+                  <p className="text-slate-400 text-xs font-normal">Identitas digital instan terintegrasi dengan logger biometrik kehadiran FGI.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs leading-tight font-normal">
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase block mb-1">NIP (REG ID)</span>
+                    <span className="text-white font-extrabold font-mono text-xs">{digitalIdEmployee.employeeId}</span>
+                  </div>
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase block mb-1">NAMA LENGKAP</span>
+                    <span className="text-white font-black text-xs block truncate" title={digitalIdEmployee.name}>{digitalIdEmployee.name}</span>
+                  </div>
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase block mb-1">PANGKAT JABATAN</span>
+                    <span className="text-white font-bold text-xs">{digitalIdEmployee.position}</span>
+                  </div>
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-850">
+                    <span className="text-[9px] font-mono font-bold text-slate-500 uppercase block mb-1">WILAYAH BEKERJA</span>
+                    <span className="text-white font-semibold text-xs">{digitalIdEmployee.branch} Region</span>
+                  </div>
+                </div>
+
+                {/* Secure Rolling Token Visualizer */}
+                <div className="bg-slate-950 border border-slate-850 p-4 rounded-2xl space-y-2">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-red-500 font-black flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-red-600 animate-ping inline-block" />
+                      Dynamic secure-token QR:
+                    </span>
+                    <span className="text-slate-400 font-mono text-[9px] uppercase">Auto-Refresh (3s)</span>
+                  </div>
+                  <div className="bg-slate-900 border border-slate-800 p-2 text-[9px] font-mono text-slate-300 break-all leading-normal select-text selection:bg-red-650/40">
+                    {qrSecurityToken}
+                  </div>
+                  <p className="text-[9.5px] text-slate-400 font-normal leading-relaxed">
+                    Kode QR di atas memiliki pengaman otentikasi liveness terenkripsi yang terus diperbarui. Hal ini menjamin keamanan log dan mencegah kecurangan presensi pegawai FGI.
+                  </p>
+                </div>
+
+                {/* Quick select template */}
+                <div className="space-y-1 text-xs select-none">
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-widest font-mono">Modifikasi Tampilan Layout</label>
+                  <div className="grid grid-cols-3 gap-1 px-0.5">
+                    <button
+                      id="dig-btn-standard"
+                      onClick={() => setDigitalCardTemplate('standard')}
+                      className={`text-[9.5px] py-1 px-1.5 rounded-lg border font-bold text-center transition ${digitalCardTemplate === 'standard' ? 'bg-slate-800 border-slate-500 text-white' : 'border-slate-800 hover:bg-slate-850 text-slate-400'}`}
+                    >
+                      Standard
+                    </button>
+                    <button
+                      id="dig-btn-sales"
+                      onClick={() => setDigitalCardTemplate('sales')}
+                      className={`text-[9.5px] py-1 px-1.5 rounded-lg border font-bold text-center transition ${digitalCardTemplate === 'sales' ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-800 hover:bg-slate-850 text-slate-400'}`}
+                      disabled={digitalIdEmployee.position !== 'Sales Executive' && digitalIdEmployee.position !== 'Sales Manager'}
+                    >
+                      Corporate Sales
+                    </button>
+                    <button
+                      id="dig-btn-manager"
+                      onClick={() => setDigitalCardTemplate('manager')}
+                      className={`text-[9.5px] py-1 px-1.5 rounded-lg border font-bold text-center transition ${digitalCardTemplate === 'manager' ? 'bg-yellow-600 border-yellow-500 text-white' : 'border-slate-800 hover:bg-slate-850 text-slate-400'}`}
+                      disabled={!digitalIdEmployee.position.toLowerCase().includes('manager') && digitalIdEmployee.position !== 'Direktur'}
+                    >
+                      Executive Suite
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal footer print action */}
+              <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row gap-3">
+                <button
+                  id="btn-digital-id-print"
+                  onClick={() => {
+                    onAddNotification('Export PDF Berhasil', `Halaman PDF kartu pegawai ${digitalIdEmployee.name} siap dicetak.`, 'success');
+                    window.print();
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs py-3 px-4 rounded-xl flex items-center justify-center space-x-1.5 transition-all text-center uppercase tracking-wider cursor-pointer shadow-lg shadow-red-700/20 active:scale-95"
+                >
+                  <Printer className="h-4 w-4 text-white" />
+                  <span>Cetak ke PDF / Print</span>
+                </button>
+                <button
+                  id="btn-digital-id-modal-cancel"
+                  onClick={() => setShowDigitalIdModal(false)}
+                  className="bg-slate-800 hover:bg-slate-750 border border-slate-700 text-white font-black text-xs py-3 px-5 rounded-xl transition cursor-pointer"
+                >
+                  Tutup Portal
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 10. HIDDEN PRINT AREA FOR PDF PRINTS ON WINDOW.PRINT() */}
+      {digitalIdEmployee && (
+        <div className="digital-id-print-area hidden print:flex flex-row items-center justify-center gap-12 p-30 bg-white text-black h-screen w-screen absolute left-0 top-0">
+          
+          {/* Printable Front Side preview */}
+          <div className="relative w-[241.2px] h-[352.8px] border border-slate-400 rounded-2xl overflow-hidden flex flex-col justify-between shrink-0 bg-white shadow-none">
+            {digitalCardTemplate === 'standard' && (
+              <div className="bg-red-700 text-white p-2.5 text-center">
+                <h4 className="text-[9px] font-black tracking-tight leading-tight uppercase font-sans">PT. FORESYNDO GLOBAL INDONESIA</h4>
+                <p className="text-[6.5px] tracking-wider font-mono">SaaS & HRIS Pro-Software</p>
+              </div>
+            )}
+            {digitalCardTemplate === 'sales' && (
+              <div className="bg-slate-100 border-b border-indigo-250 p-2 text-center flex justify-between items-center px-4">
+                <span className="text-[8px] font-extrabold text-blue-900 leading-tight uppercase font-sans text-left">PT. FORESYNDO<br/>GLOBAL INDONESIA</span>
+                <span className="text-[7.5px] uppercase bg-gradient-to-r from-indigo-500 to-indigo-800 text-white font-black px-2 py-0.5 rounded-full font-mono">SALES</span>
+              </div>
+            )}
+            {digitalCardTemplate === 'manager' && (
+              <div className="bg-slate-950 p-2.5 text-center border-b border-yellow-500 text-white">
+                <h4 className="text-[9px] font-black tracking-tight uppercase text-yellow-500">PT. FORESYNDO GLOBAL INDONESIA</h4>
+                <p className="text-[6.5px] text-yellow-101 text-yellow-100 tracking-wider">EXECUTIVE SUITE LEAGUE</p>
+              </div>
+            )}
+
+            <div className="p-3 flex-1 flex flex-col justify-center items-center space-y-1.5 text-center">
+              <img src={digitalIdEmployee.photo} className="h-14 w-14 rounded-full object-cover border-2 border-slate-200" />
+              <div>
+                <h3 className="text-xs font-black text-slate-900 leading-none uppercase">{digitalIdEmployee.name}</h3>
+                <span className="text-[8.5px] font-bold text-slate-500 uppercase mt-1 block">{digitalIdEmployee.position}</span>
+              </div>
+              <div className="w-full bg-slate-50 border p-1 rounded text-[8px] space-y-0.5 leading-normal text-slate-850">
+                <div className="flex justify-between px-1"><span>REG ID (NIP):</span><span className="font-mono font-bold">{digitalIdEmployee.employeeId}</span></div>
+                <div className="flex justify-between px-1"><span>CABANG (REGION):</span><span className="font-semibold">{digitalIdEmployee.branch}</span></div>
+              </div>
+              <div className="p-1 border rounded bg-white">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrSecurityToken)}`} className="h-10 w-10 shrink-0" referrerPolicy="no-referrer" />
+              </div>
+            </div>
+
+            <div className="p-1.5 border-t text-[7.5px] text-center text-slate-500 bg-slate-50">
+              www.foresyndo.co.id
+            </div>
+          </div>
+
+          {/* Printable Back Side preview */}
+          <div style={cardBackStyle} className="relative w-[241.2px] h-[352.8px] border border-slate-950 rounded-2xl overflow-hidden flex flex-col justify-between shrink-0 bg-slate-900 text-white text-center shadow-none">
+            <div className={`h-1.5 w-full ${digitalCardTemplate === 'manager' ? 'bg-yellow-500' : 'bg-red-650'}`} />
+
+            <div className="p-4 text-center flex-1 flex flex-col justify-center items-center space-y-3.5">
+              <div>
+                <p className={`text-[8.5px] font-bold uppercase tracking-widest ${digitalCardTemplate === 'manager' ? 'text-yellow-500' : 'text-slate-400'}`}>KARTU AKSES PREFRAL</p>
+                <span className="text-[6.5px] text-slate-500 uppercase block font-mono mt-0.5">HRIS SYSTEM SECURITY PRO</span>
+              </div>
+
+              <div className="bg-white p-2.5 rounded-lg border-2 border-slate-700">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrSecurityToken)}`} className="h-18 w-18 shrink-0" referrerPolicy="no-referrer" />
+              </div>
+
+              <div className="text-[8.5px] font-mono leading-relaxed space-y-0.5 border-t border-b border-slate-800 py-2 w-full text-slate-300">
+                <p>MASA BERLAKU: {digitalIdEmployee.masaBerlaku || '12/2029'}</p>
+                <p className="text-[7.5px] text-emerald-400 font-extrabold block">STATUS: AKTIF TERVERIFIKASI</p>
+              </div>
+
+              <div className="w-full text-slate-300">
+                {generateBarcodeSVG(digitalIdEmployee.barcode)}
+                <span className="text-[6px] text-slate-500 block font-mono mt-1">CARD SERIAL: {digitalIdEmployee.cardNumber}</span>
+              </div>
+            </div>
+
+            <div className="p-2.5 bg-slate-950 text-[5.5px] text-slate-550 block font-sans text-slate-500 uppercase leading-normal">
+              MILIK PT. FORESYNDO GLOBAL INDONESIA. HARAP KEMBALIKAN KE BAGIAN HRD JIKA DITEMUKAN.
+            </div>
           </div>
 
         </div>
